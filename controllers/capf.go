@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"encoding/json"
 	// "github.com/09sachin/go-capf/config"
 	// "github.com/09sachin/go-capf/models"
 	"net/http"
@@ -10,15 +11,29 @@ import (
 
 func DashboardData(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("login")
+	dashboard_query := "select family_id, family_guid, year_of_birth,dob, gender, insertion_date, pfms_id, mobile_number from capf.capf_prod_noimage_refresh  limit 10;"
+	fmt.Println(dashboard_query)
+	response := Response{
+		Message: "Hello, JSON!",
+	}
 
-	http.Redirect(w, r, "/", 301)
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Encode the response as JSON and write it to the response writer
+	err := json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		return
+	}
+
 }
 
 
 func UserDetails(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("opt sent")
+	user_details_query := "select family_id, family_guid, year_of_birth,dob, gender, insertion_date, pfms_id, mobile_number,address, pincode, state_lgd_code, district_lgd_code, subdistrict_lgd_code, village_town_lgd_code from capf.capf_prod_noimage_refresh limit 10"
+	fmt.Println(user_details_query)
 
 	http.Redirect(w, r, "/", 301)
 }
@@ -27,7 +42,8 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 
 func Hospitals(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("opt sent")
+	hospital_query := "select * from  hem_t_hosp_info WHERE empanelment_type in ( 'PMJAY and CAPF', 'PMJAY','Only CAPF','PMJAY and CGHS') and active_yn ='Y' and hosp_status ='Approved'"
+	fmt.Println(hospital_query)
 
 	http.Redirect(w, r, "/", 301)
 }
@@ -42,7 +58,8 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 
 func Queries(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("opt sent")
+	query := "select wa.transaction_id, wa.remarks, wa.current_group_id, wa.crt_dt, reim.claim_sub_dt from capf.tms_t_case_workflow_audit wa join capf.case_dump_capf_reim_pfms reim on reim.patient_no=wa.transaction_id where wa.current_group_id in ('GP603', 'GPSHA', 'GPMD', 'GPBANK') and reim.card_no='PG1OU04V2' and reim.ben_pending='Y' order by wa.crt_dt limit 1"
+	fmt.Println(query)
 
 	http.Redirect(w, r, "/", 301)
 }
@@ -50,7 +67,8 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 
 func TrackCases(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("opt sent")
+	track_query := "select case_no, claim_sub_dt, workflow_status_desc from capf.case_dump_capf_reim_pfms where case_no='REM/2022/470381'"
+	fmt.Println(track_query)
 
 	http.Redirect(w, r, "/", 301)
 }
