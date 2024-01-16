@@ -2,25 +2,31 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/09sachin/go-capf/config"
-	"github.com/09sachin/go-capf/models"
-	"html/template"
+	"encoding/json"
+	// "github.com/09sachin/go-capf/config"
+	// "github.com/09sachin/go-capf/models"
 	"net/http"
 )
 
-var (
-	id        int
-	item      string
-	completed int
-	database  = config.Database()
-)
+type Response struct {
+	Message string `json:"message"`
+}
 
-func Login(w http.ResponseWriter, r *http.Request) {
+func OtpLogin(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("login")
+	response := Response{
+		Message: "Hello, JSON!",
+	}
 
-	http.Redirect(w, r, "/", 301)
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Encode the response as JSON and write it to the response writer
+	err := json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		return
+	}
 }
 
 

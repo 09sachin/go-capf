@@ -8,9 +8,8 @@ import (
 func Init() *mux.Router {
 	route := mux.NewRouter()
 
-	route.HandleFunc("/", controllers.Show)
 	route.HandleFunc("/send-otp", controllers.SendOtp).Methods("POST")
-	route.HandleFunc("/otp-login", controllers.Login).Methods("POST")
+	route.HandleFunc("/otp-login", controllers.OtpLogin).Methods("POST")
 	route.HandleFunc("/dashboard-data", controllers.DashboardData).Methods("GET")
 	route.HandleFunc("/user-details", controllers.UserDetails).Methods("GET")
 	route.HandleFunc("/hospital-list", controllers.Hospitals).Methods("GET")

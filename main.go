@@ -6,16 +6,20 @@ import (
 	"github.com/09sachin/go-capf/routes"
 	"github.com/joho/godotenv"
 	"net/http"
-	"os"
 )
 
-func main() {
-	
-	if err := godotenv.Load(); err != nil {
-		fmt.Println(errors.New("no .env file found"))
+func loadEnv() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Error loading .env file")
 	}
+}
 
-	port, exist := os.LookupEnv("PORT")
+func main() {
+
+	loadEnv()
+
+	port, exist := "8000", true
 
 	if !exist {
 		fmt.Println(errors.New("PORT not set in .env"))
