@@ -11,7 +11,7 @@ import (
 
 func DashboardData(w http.ResponseWriter, r *http.Request) {
 
-	dashboard_query := "select family_id, family_guid, year_of_birth,dob, gender, insertion_date, pfms_id, mobile_number from capf.capf_prod_noimage_refresh  limit 10;"
+	dashboard_query := "select member_name_eng, year_of_birth, dob, gender, insertion_date, mobile_number from capf.capf_prod_noimage_refresh  where id_number='000000523';"
 	fmt.Println(dashboard_query)
 	response := Response{
 		Message: "Hello, JSON!",
@@ -32,7 +32,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 func UserDetails(w http.ResponseWriter, r *http.Request) {
 
-	user_details_query := "select family_id, family_guid, year_of_birth,dob, gender, insertion_date, pfms_id, mobile_number,address, pincode, state_lgd_code, district_lgd_code, subdistrict_lgd_code, village_town_lgd_code from capf.capf_prod_noimage_refresh limit 10"
+	user_details_query := "select member_name_eng, year_of_birth,dob, gender, insertion_date, pfms_id, mobile_number,address, pincode, state_lgd_code, district_lgd_code, subdistrict_lgd_code, village_town_lgd_code from capf.capf_prod_noimage_refresh limit 10"
 	fmt.Println(user_details_query)
 
 	http.Redirect(w, r, "/", 301)
@@ -49,8 +49,28 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 }
 
 func FilterHospital(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Println("opt sent")
+	filter_hosp := ` SELECT hosp_name, hosp_latitude, hosp_longitude
+		FROM hem_t_hosp_info
+		WHERE 
+			CASE WHEN hosp_latitude ~ '^-?\d+(\.\d+)?$' 
+				THEN CAST(hosp_latitude AS DOUBLE PRECISION) 
+				ELSE NULL 
+			END IS NOT NULL
+			AND 
+			CASE WHEN hosp_longitude ~ '^-?\d+(\.\d+)?$' 
+				THEN CAST(hosp_longitude AS DOUBLE PRECISION) 
+				ELSE NULL 
+			END IS NOT NULL
+			AND 6371 * 2 * ASIN(SQRT(
+				POWER(SIN(RADIANS(CAST(hosp_latitude AS DOUBLE PRECISION) - CAST(18.72 AS DOUBLE PRECISION)) / 2), 2) +
+				COS(RADIANS(CAST(18.72 AS DOUBLE PRECISION))) * COS(RADIANS(CAST(hosp_latitude AS DOUBLE PRECISION))) *
+				POWER(SIN(RADIANS(CAST(hosp_longitude AS DOUBLE PRECISION) - CAST(79.97 AS DOUBLE PRECISION)) / 2), 2)
+			)) <= 10 
+			AND empanelment_type IN ('PMJAY and CAPF', 'PMJAY', 'Only CAPF', 'PMJAY and CGHS') 
+			AND active_yn = 'Y' 
+			AND hosp_status = 'Approved' 
+		LIMIT 10;`
+	fmt.Println(filter_hosp)
 
 	http.Redirect(w, r, "/", 301)
 }
