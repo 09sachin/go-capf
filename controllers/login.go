@@ -12,8 +12,14 @@ type Response struct {
 	Message string `json:"message"`
 }
 
+type JsonResponse struct {
+	Message json.RawMessage `json:"message"`
+}
+
 func OtpLogin(w http.ResponseWriter, r *http.Request) {
-	login_q := "select mobile_number, relation_name, id_number  from capf.capf_prod_noimage_refresh where id_number='000000523' and relation_name='Self'"
+	login_q := `select mobile_number, relation_name, id_number  
+	from capf.capf_prod_noimage_refresh 
+	where id_number='000000523' and relation_name='Self'`
 	fmt.Println(login_q)
 	response := Response{
 		Message: "Hello, JSON!",

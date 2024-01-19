@@ -3,19 +3,34 @@ package config
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
 )
 
-const (
-	host     = "your_database_host"
-	port     = 5432
-	user     = "your_database_user"
-	password = "your_database_password"
-	dbname   = "your_database_name"
+
+
+var (
+	host     = getEnv("DB_HOST")
+    port     = getEnv("DB_PORT")
+    user     = getEnv("DB_USER")
+    password = getEnv("DB_PASS")
+    dbname   = getEnv("DB_NAME")
 )
 
+func getEnv(key string) string {
+    value, exists := os.LookupEnv(key)
+    if !exists {
+        fmt.Printf("Warning: Environment variable %s is not set.\n", key)
+        return ""
+    }
+    return value
+}
+
+
+
 func connectDB() (*sql.DB, error) {
-	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
 	db, err := sql.Open("postgres", connStr)

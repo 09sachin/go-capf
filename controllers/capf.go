@@ -3,26 +3,50 @@ package controllers
 import (
 	"fmt"
 	"encoding/json"
-	// "github.com/09sachin/go-capf/config"
+	"github.com/09sachin/go-capf/config"
 	// "github.com/09sachin/go-capf/models"
 	"net/http"
 )
 
+type CapfProdNoImageRefresh struct {
+	MemberNameEng   string
+	YearOfBirth     int // Assuming it's an integer; adjust based on your schema
+	DOB             string
+	Gender          string
+	InsertionDate   string
+	MobileNumber    string
+}
 
 func DashboardData(w http.ResponseWriter, r *http.Request) {
 
-	dashboard_query := "select member_name_eng, year_of_birth, dob, gender, insertion_date, mobile_number from capf.capf_prod_noimage_refresh  where id_number='000000523';"
-	fmt.Println(dashboard_query)
-	response := Response{
-		Message: "Hello, JSON!",
+	dashboardQuery := "SELECT member_name_eng, year_of_birth, dob, gender, insertion_date, mobile_number FROM capf.capf_prod_noimage_refresh WHERE id_number='000000523';"
+
+	rows, _ := config.ExecuteQuery(dashboardQuery)
+	
+	var dataList []CapfProdNoImageRefresh
+
+	for rows.Next() {
+		var data CapfProdNoImageRefresh
+		err := rows.Scan(&data.MemberNameEng, &data.YearOfBirth, &data.DOB, &data.Gender, &data.InsertionDate, &data.MobileNumber)
+		fmt.Println(err)
+		dataList = append(dataList, data)	
+	}
+
+
+	jsonData, err := json.MarshalIndent(dataList, "", "    ")
+
+	fmt.Println(err)
+	
+	response := JsonResponse{
+		Message: json.RawMessage(jsonData),
 	}
 
 	// Set the Content-Type header to application/json
 	w.Header().Set("Content-Type", "application/json")
 
 	// Encode the response as JSON and write it to the response writer
-	err := json.NewEncoder(w).Encode(response)
-	if err != nil {
+	errr := json.NewEncoder(w).Encode(response)
+	if errr != nil {
 		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
 		return
 	}
@@ -49,7 +73,8 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 }
 
 func FilterHospital(w http.ResponseWriter, r *http.Request) {
-	filter_hosp := ` SELECT hosp_name, hosp_latitude, hosp_longitude
+	radius := 10
+	filter_hosp := fmt.Sprintf(` SELECT hosp_name, hosp_latitude, hosp_longitude
 		FROM hem_t_hosp_info
 		WHERE 
 			CASE WHEN hosp_latitude ~ '^-?\d+(\.\d+)?$' 
@@ -65,11 +90,11 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 				POWER(SIN(RADIANS(CAST(hosp_latitude AS DOUBLE PRECISION) - CAST(18.72 AS DOUBLE PRECISION)) / 2), 2) +
 				COS(RADIANS(CAST(18.72 AS DOUBLE PRECISION))) * COS(RADIANS(CAST(hosp_latitude AS DOUBLE PRECISION))) *
 				POWER(SIN(RADIANS(CAST(hosp_longitude AS DOUBLE PRECISION) - CAST(79.97 AS DOUBLE PRECISION)) / 2), 2)
-			)) <= 10 
+			)) <= %d
 			AND empanelment_type IN ('PMJAY and CAPF', 'PMJAY', 'Only CAPF', 'PMJAY and CGHS') 
 			AND active_yn = 'Y' 
 			AND hosp_status = 'Approved' 
-		LIMIT 10;`
+		LIMIT 10;`, radius)
 	fmt.Println(filter_hosp)
 
 	http.Redirect(w, r, "/", 301)
@@ -78,7 +103,11 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 
 func Queries(w http.ResponseWriter, r *http.Request) {
 
-	query := "select wa.transaction_id, wa.remarks, wa.current_group_id, wa.crt_dt, reim.claim_sub_dt from capf.tms_t_case_workflow_audit wa join capf.case_dump_capf_reim_pfms reim on reim.patient_no=wa.transaction_id where wa.current_group_id in ('GP603', 'GPSHA', 'GPMD', 'GPBANK') and reim.card_no='PG1OU04V2' and reim.ben_pending='Y' order by wa.crt_dt limit 1"
+	query := `select wa.transaction_id, wa.remarks, wa.current_group_id, wa.crt_dt, reim.claim_sub_dt 
+			from capf.tms_t_case_workflow_audit wa join capf.case_dump_capf_reim_pfms reim 
+			on reim.patient_no=wa.transaction_id 
+			where wa.current_group_id in ('GP603', 'GPSHA', 'GPMD', 'GPBANK') 
+			and reim.card_no='PG1OU04V2' and reim.ben_pending='Y' order by wa.crt_dt limit 1`
 	fmt.Println(query)
 
 	http.Redirect(w, r, "/", 301)
@@ -86,10 +115,11 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 
 
 func TrackCases(w http.ResponseWriter, r *http.Request) {
-
-	track_query := "select case_no, claim_sub_dt, workflow_status_desc from capf.case_dump_capf_reim_pfms where case_no='REM/2022/470381'"
+	case_no := "REM/2022/470381"
+	track_query := fmt.Sprintf(`select case_no, claim_sub_dt, workflow_status_desc 
+	from capf.case_dump_capf_reim_pfms 
+	where case_no='%s'`, case_no)
 	fmt.Println(track_query)
-
 	http.Redirect(w, r, "/", 301)
 }
 
