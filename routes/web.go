@@ -16,7 +16,7 @@ func Init() *mux.Router {
 	route.HandleFunc("/filter-hospital", controllers.FilterHospital).Methods("GET")
 	route.HandleFunc("/queries", controllers.Queries).Methods("GET")
 	route.HandleFunc("/track-case", controllers.TrackCases).Methods("GET")
-	route.HandleFunc("/claims", controllers.Claims).Methods("GET")
+	route.HandleFunc("/claims", controllers.UserClaims).Methods("GET")
 
 	return route
 }
