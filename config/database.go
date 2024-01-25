@@ -62,3 +62,38 @@ func ExecuteQuery(query string, args ...interface{}) (*sql.Rows, error) {
 
 	return rows, nil
 }
+
+
+// InsertData inserts data into the database using a custom query
+func InsertData(query string, args ...interface{}) error {
+    db, err := connectDB()
+    if err != nil {
+        return err
+    }
+    defer db.Close()
+
+    _, err = db.Exec(query, args...)
+    if err != nil {
+        return err
+    }
+
+    fmt.Println("Data inserted successfully")
+    return nil
+}
+
+// UpdateData updates data in the database using a custom query
+func UpdateData(query string, args ...interface{}) error {
+    db, err := connectDB()
+    if err != nil {
+        return err
+    }
+    defer db.Close()
+
+    _, err = db.Exec(query, args...)
+    if err != nil {
+        return err
+    }
+
+    fmt.Println("Data updated successfully")
+    return nil
+}

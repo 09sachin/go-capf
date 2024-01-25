@@ -2,13 +2,16 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
 	"encoding/json"
-	"bytes"
+	"net/url"
+	"math/rand"
 	"time"
 	"github.com/09sachin/go-capf/config"
 	_"github.com/09sachin/go-capf/models"
 	"net/http"
 	"github.com/dgrijalva/jwt-go"
+	"io/ioutil"
 )
 
 
@@ -34,6 +37,10 @@ type PhoneNo struct {
 	MobileNumber    string
 }
 
+type OTP struct {
+	Otp    int
+}
+
 func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("Authorization")
@@ -55,7 +62,7 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func createToken(username string) (string, error) {
-	expirationTime := time.Now().Add(5 * time.Minute)
+	expirationTime := time.Now().Add(120 * time.Minute)
 
 	claims := &TokenClaim{
 		Username: username,
@@ -105,28 +112,86 @@ func getClaimsFromRequest(r *http.Request) (*TokenClaim, error) {
 	return claims, nil
 }
 
+type RequestBody struct {
+	ForceID string `json:"force_id"`
+	OTP     string `json:"otp"`
+}
+
+type PmjayQuery struct{
+	PMJAY string
+}
 
 func OtpLogin(w http.ResponseWriter, r *http.Request) {
-	id := r.FormValue("force_id")
-	login_q := fmt.Sprintf(`select mobile_number, relation_name, id_number  
-	from capf.capf_prod_noimage_refresh 
-	where id_number='%s' and relation_name='Self'`, id)
-	fmt.Println(login_q)
-	response := Response{
-		Message: "Hello, JSON!",
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Read the request body
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		return
+	}
+
+	// Unmarshal the JSON data into a struct
+	var requestData RequestBody
+	err = json.Unmarshal(body, &requestData)
+	if err != nil {
+		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Access the values from the struct
+	id := requestData.ForceID
+	otp := requestData.OTP
+
+	// get_otp := fmt.Sprintf("select otp from login where force_id=%s", id)
+
+	// rows, _ := config.ExecuteQuery(get_otp)
+	
+	// var dataList []OTP
+
+	// for rows.Next() {
+	// 	var data OTP
+	// 	err := rows.Scan(&data.Otp)
+	// 	fmt.Println(err)
+	// 	dataList = append(dataList, data)	
+	// }
+
+	otp_stored := "123456"
+	fmt.Println(otp)
+
+	if otp_stored!=otp{
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	token, _ := createToken(id)
+
+	response  := Response{
+		Message:  token,
 	}
 
 	// Set the Content-Type header to application/json
 	w.Header().Set("Content-Type", "application/json")
 
 	// Encode the response as JSON and write it to the response writer
-	err := json.NewEncoder(w).Encode(response)
-	if err != nil {
+	err2 := json.NewEncoder(w).Encode(response)
+	if err2 != nil {
 		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
 		return
 	}
 }
 
+
+func generateOTP() string {
+	src := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(src)
+	otp := r.Intn(900000) + 100000
+	otp_str := strconv.Itoa(otp)
+	return otp_str
+}
 
 func SendOtp(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("force_id")
@@ -145,47 +210,59 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 		dataList = append(dataList, data)	
 	}
 
-	phone_no := dataList[0].MobileNumber
+	//phone_no := dataList[0].MobileNumber
+	phone_no := "7014600922"
+	//otp := generateOTP()
+	otp := "123456"
+	fmt.Println(otp)
 
-	success := OtpService((phone_no))
+	success := sendSMSAPI(phone_no, otp)
+	var message string
+	if success{
+		message = fmt.Sprintf("OTP sent successfully to %s", phone_no)
+	}else{
+		message = fmt.Sprintf("Failed to send OTP to %s", phone_no)
+	}
 
-	if success==0{
+	response  := Response{
+		Message:  message,
+	}
+
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Encode the response as JSON and write it to the response writer
+	err := json.NewEncoder(w).Encode(response)
+	if err != nil {
 		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		return
 	}
 }
 
-func OtpService(phone string) int{
-	// URL to which the POST request will be sent
-	url := "https://example.com/api"
+func sendSMSAPI(phoneNo, otp string) bool {
+	msg := fmt.Sprintf("Dear User,\nOTP to validate your Allied and Healthcare Institute Registry application is %s. This One Time Password will be valid for 10 mins.\nABDM, National Health Authority", otp)
+	username := "abhaotp"
+	password := "f9F3r%5D%7BS"
+	entityID := "1001548700000010184"
+	tempID := "1007169865765792689"
+	source := "NHASMS"
 
-	// Request payload (data to be sent in the request body)
-	payload := []byte(fmt.Sprintf(`{"phone_no": "%s", "key2": "value2"}`, phone))
+	urlStr := fmt.Sprintf("https://sms6.rmlconnect.net:8443/bulksms/bulksms?username=%s&password=%s&type=0&dlr=1&destination=%s&source=%s&message=%s&entityid=%s&tempid=%s",
+		url.QueryEscape(username), url.QueryEscape(password), url.QueryEscape(phoneNo),
+		url.QueryEscape(source), url.QueryEscape(msg), url.QueryEscape(entityID), url.QueryEscape(tempID))
 
-	// Create a new POST request with the specified URL and payload
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	response, err := http.Post(urlStr, "application/json", nil)
 	if err != nil {
-		fmt.Println("Error creating request:", err)
-		return 0
+		fmt.Println("Error sending SMS:", err)
+		return false
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode == http.StatusOK {
+		fmt.Println("SMS sent successfully")
+		return true
 	}
 
-	// Set the Content-Type header for the request
-	req.Header.Set("Content-Type", "application/json")
-
-	// Create an HTTP client and send the request
-	client := http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("Error sending request:", err)
-		return 0
-	}
-	defer resp.Body.Close()
-
-	// Check the response status
-	if resp.StatusCode == http.StatusOK {
-		fmt.Println("POST request was successful")
-		return 1
-	} else {
-		fmt.Println("POST request failed with status:", resp.Status)
-		return 0
-	}
+	fmt.Println("Failed to send SMS. Status code:", response.StatusCode)
+	return false
 }

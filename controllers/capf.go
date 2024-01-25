@@ -15,6 +15,7 @@ type CapfProdNoImageRefresh struct {
 	Gender          string
 	InsertionDate   string
 	MobileNumber    string
+	Id              string
 }
 
 func DashboardData(w http.ResponseWriter, r *http.Request) {
@@ -23,12 +24,13 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	//id := "913228862"
 
 	id := claims.Username
 
 
 	dashboardQuery := fmt.Sprintf(`SELECT member_name_eng, year_of_birth, dob, gender,
-	 insertion_date, mobile_number 
+	 insertion_date, mobile_number, id_number 
 	 FROM capf.capf_prod_noimage_refresh 
 	 WHERE id_number='%s' and relation_name='Self';`, id)
 
@@ -38,7 +40,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var data CapfProdNoImageRefresh
-		err := rows.Scan(&data.MemberNameEng, &data.YearOfBirth, &data.DOB, &data.Gender, &data.InsertionDate, &data.MobileNumber)
+		err := rows.Scan(&data.MemberNameEng, &data.YearOfBirth, &data.DOB, &data.Gender, &data.InsertionDate, &data.MobileNumber, &data.Id)
 		fmt.Println(err)
 		dataList = append(dataList, data)	
 	}
@@ -65,6 +67,19 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 }
 
 
+type UserDetail struct {
+	MemberNameEng   string
+	DOB             string
+	Gender          string
+	Id              string
+	IdType          string
+	PMJAY			string
+	Unit			string
+	AccountHolder   string
+	Bank 			string
+	AccountNumber   string
+	Ifsc            string
+}
 func UserDetails(w http.ResponseWriter, r *http.Request) {
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
@@ -73,29 +88,95 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := claims.Username
-	user_details_query := fmt.Sprintf(`select member_name_eng, year_of_birth,dob, gender, 
-	insertion_date, pfms_id, mobile_number,address, pincode, state_lgd_code, district_lgd_code, 
-	subdistrict_lgd_code, village_town_lgd_code 
+	user_details_query := fmt.Sprintf(`select member_name_eng, dob, gender, 
+	id_number, id_type, pmjay_id, unit_name, account_holder_name, bank_name, bank_account_number, ifsc_code 
 	from capf.capf_prod_noimage_refresh where id_number='%s' and relation_name='Self';`, id)
-	fmt.Println(user_details_query)
+	
+	rows, _ := config.ExecuteQuery(user_details_query)
+	
+	var dataList []UserDetail
 
-	http.Redirect(w, r, "/", 301)
+	for rows.Next() {
+		var data UserDetail
+		err := rows.Scan(&data.MemberNameEng, &data.DOB, &data.Gender, &data.Id, &data.IdType, &data.PMJAY, &data.Unit, &data.AccountHolder, &data.Bank, &data.AccountNumber, &data.Ifsc)
+		fmt.Println(err)
+		dataList = append(dataList, data)	
+	}
+
+
+	jsonData, err := json.MarshalIndent(dataList, "", "    ")
+
+	fmt.Println(err)
+	
+	response := JsonResponse{
+		Message: json.RawMessage(jsonData),
+	}
+
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Encode the response as JSON and write it to the response writer
+	errr := json.NewEncoder(w).Encode(response)
+	if errr != nil {
+		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		return
+	}
 }
 
 
-
+type Hospital struct{
+	HospName   string 
+	HospLatitude   string
+	HospLongitude  string
+	EmpanelmentType   string
+}
 func Hospitals(w http.ResponseWriter, r *http.Request) {
 
-	hospital_query := "select * from  hem_t_hosp_info WHERE empanelment_type in ( 'PMJAY and CAPF', 'PMJAY','Only CAPF','PMJAY and CGHS') and active_yn ='Y' and hosp_status ='Approved'"
-	fmt.Println(hospital_query)
+	hospital_query := "select empanelment_type, hosp_name, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in ( 'PMJAY and CAPF', 'PMJAY','Only CAPF','PMJAY and CGHS') and active_yn ='Y' and hosp_status ='Approved'"
+	rows, _ := config.ExecuteQuery(hospital_query)
+	
+	var dataList []Hospital
 
-	http.Redirect(w, r, "/", 301)
+	for rows.Next() {
+		var data Hospital
+		err := rows.Scan(&data.HospName, &data.HospLatitude, &data.HospLongitude, &data.EmpanelmentType)
+		fmt.Println(err)
+		dataList = append(dataList, data)	
+	}
+
+	jsonData, err := json.MarshalIndent(dataList, "", "    ")
+
+	fmt.Println(err)
+	
+	response := JsonResponse{
+		Message: json.RawMessage(jsonData),
+	}
+
+
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Encode the response as JSON and write it to the response writer
+	errr := json.NewEncoder(w).Encode(response)
+	if errr != nil {
+		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		return
+	}
 }
+
+
+type NearestHospital struct {
+	HospName   string 
+	HospLatitude   string
+	HospLongitude  string
+	EmpanelmentType   string
+}
+
 
 func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	query_params := r.URL.Query()
 	radius := query_params.Get("radius")
-	filter_hosp := fmt.Sprintf(` SELECT hosp_name, hosp_latitude, hosp_longitude
+	filter_hosp := fmt.Sprintf(` SELECT hosp_name, hosp_latitude, hosp_longitude, empanelment_type
 		FROM hem_t_hosp_info
 		WHERE 
 			CASE WHEN hosp_latitude ~ '^-?\d+(\.\d+)?$' 
@@ -116,11 +197,47 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 			AND active_yn = 'Y' 
 			AND hosp_status = 'Approved' 
 		LIMIT 10;`, radius)
-	fmt.Println(filter_hosp)
+	
+	rows, _ := config.ExecuteQuery(filter_hosp)
+	
+	var dataList []NearestHospital
 
-	http.Redirect(w, r, "/", 301)
+	for rows.Next() {
+		var data NearestHospital
+		err := rows.Scan(&data.HospName, &data.HospLatitude, &data.HospLongitude, &data.EmpanelmentType)
+		fmt.Println(err)
+		dataList = append(dataList, data)	
+	}
+
+	fmt.Println(dataList)
+
+
+	jsonData, err := json.MarshalIndent(dataList, "", "    ")
+
+	fmt.Println(err)
+	fmt.Println(string(jsonData))
+	
+	response := JsonResponse{
+		Message: json.RawMessage(jsonData),
+	}
+
+
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Encode the response as JSON and write it to the response writer
+	errr := json.NewEncoder(w).Encode(response)
+	if errr != nil {
+		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		return
+	}
 }
 
+type Query struct{
+	Remarks 		string
+	SubmissionDate  string
+	CaseNo  		string
+}
 
 func Queries(w http.ResponseWriter, r *http.Request) {
 	claims, err := getClaimsFromRequest(r)
@@ -130,34 +247,108 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := claims.Username
+	fmt.Println(id)
+	query_params := r.URL.Query()
+	pmjay_id := query_params.Get("pmjay")
 
-	query := fmt.Sprintf(`select wa.transaction_id, wa.remarks, 
-			wa.current_group_id, wa.crt_dt, reim.claim_sub_dt 
+	query := fmt.Sprintf(`select  wa.remarks, 
+			 reim.claim_sub_dt, reim.case_no
 			from capf.tms_t_case_workflow_audit wa 
 			join capf.case_dump_capf_reim_pfms reim 
 			on reim.patient_no=wa.transaction_id 
 			where wa.current_group_id in ('GP603', 'GPSHA', 'GPMD', 'GPBANK') 
-			and reim.card_no='%s' and reim.ben_pending='Y' 
-			order by wa.crt_dt limit 1`, id)
-	fmt.Println(query)
+			and reim.card_no in %s and reim.ben_pending='Y' 
+			order by wa.crt_dt `, pmjay_id)
+	
+	rows, _ := config.ExecuteQuery(query)
 
-	http.Redirect(w, r, "/", 301)
+	var dataList []Query
+
+	for rows.Next() {
+		var data Query
+		err := rows.Scan(&data.Remarks, &data.SubmissionDate, &data.CaseNo)
+		fmt.Println(err)
+		dataList = append(dataList, data)	
+	}
+
+	fmt.Println(dataList)
+
+
+	jsonData, err := json.MarshalIndent(dataList, "", "    ")
+
+	fmt.Println(err)
+	fmt.Println(string(jsonData))
+	
+	response := JsonResponse{
+		Message: json.RawMessage(jsonData),
+	}
+
+
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Encode the response as JSON and write it to the response writer
+	errr := json.NewEncoder(w).Encode(response)
+	if errr != nil {
+		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		return
+	}
 }
 
 
+type TrackCase struct{
+	CaseNo string
+	ClaimSubmissionDate string
+	Status string
+}
 func TrackCases(w http.ResponseWriter, r *http.Request) {
 	query_params := r.URL.Query()
 	case_no := query_params.Get("case_no")
 	track_query := fmt.Sprintf(`select case_no, claim_sub_dt, workflow_status_desc 
 	from capf.case_dump_capf_reim_pfms 
 	where case_no='%s'`, case_no)
-	fmt.Println(track_query)
-	http.Redirect(w, r, "/", 301)
+	rows, _ := config.ExecuteQuery(track_query)
+	
+	var dataList []TrackCase
+
+	for rows.Next() {
+		var data TrackCase
+		err := rows.Scan(&data.CaseNo, &data.ClaimSubmissionDate, &data.Status)
+		fmt.Println(err)
+		dataList = append(dataList, data)	
+	}
+
+	fmt.Println(dataList)
+
+
+	jsonData, err := json.MarshalIndent(dataList, "", "    ")
+
+	fmt.Println(err)
+	fmt.Println(string(jsonData))
+	
+	response := JsonResponse{
+		Message: json.RawMessage(jsonData),
+	}
+
+
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Encode the response as JSON and write it to the response writer
+	errr := json.NewEncoder(w).Encode(response)
+	if errr != nil {
+		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		return
+	}
 }
 
+
 func UserClaims(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Println("opt sent")
-
+	query_params := r.URL.Query()
+	case_no := query_params.Get("case_no")
+	track_query := fmt.Sprintf(`select case_no, claim_sub_dt, workflow_status_desc 
+	from capf.case_dump_capf_reim_pfms 
+	where case_no='%s'`, case_no)
+	fmt.Println((track_query))
 	http.Redirect(w, r, "/", 301)
 }
