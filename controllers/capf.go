@@ -248,8 +248,6 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 
 	id := claims.Username
 	fmt.Println(id)
-	query_params := r.URL.Query()
-	pmjay_id := query_params.Get("pmjay")
 
 	query := fmt.Sprintf(`select  wa.remarks, 
 			 reim.claim_sub_dt, reim.case_no
@@ -257,8 +255,8 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 			join capf.case_dump_capf_reim_pfms reim 
 			on reim.patient_no=wa.transaction_id 
 			where wa.current_group_id in ('GP603', 'GPSHA', 'GPMD', 'GPBANK') 
-			and reim.card_no in %s and reim.ben_pending='Y' 
-			order by wa.crt_dt `, pmjay_id)
+			and reim.card_no in (select pmjay_id from capf.capf_prod_noimage_refresh where id_number='%s') and reim.ben_pending='Y' 
+			order by wa.crt_dt `, id)
 	
 	rows, _ := config.ExecuteQuery(query)
 

@@ -210,6 +210,12 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 		dataList = append(dataList, data)	
 	}
 
+	if len(dataList)==0{
+		http.Error(w, "Wrong force id", http.StatusNotFound)
+		return
+	}
+
+
 	//phone_no := dataList[0].MobileNumber
 	phone_no := "7014600922"
 	//otp := generateOTP()
@@ -240,7 +246,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendSMSAPI(phoneNo, otp string) bool {
-	msg := fmt.Sprintf("Dear User,\nOTP to validate your Allied and Healthcare Institute Registry application is %s. This One Time Password will be valid for 10 mins.\nABDM, National Health Authority", otp)
+	msg := fmt.Sprintf("Dear User,\nOTP to validate your Allied and Healthcare Institute Registry application is %s. This is One Time Password will be valid for 10 mins.\nABDM, National Health Authority", otp)
 	username := "abhaotp"
 	password := "f9F3r%5D%7BS"
 	entityID := "1001548700000010184"
@@ -250,7 +256,7 @@ func sendSMSAPI(phoneNo, otp string) bool {
 	urlStr := fmt.Sprintf("https://sms6.rmlconnect.net:8443/bulksms/bulksms?username=%s&password=%s&type=0&dlr=1&destination=%s&source=%s&message=%s&entityid=%s&tempid=%s",
 		url.QueryEscape(username), url.QueryEscape(password), url.QueryEscape(phoneNo),
 		url.QueryEscape(source), url.QueryEscape(msg), url.QueryEscape(entityID), url.QueryEscape(tempID))
-
+	
 	response, err := http.Post(urlStr, "application/json", nil)
 	if err != nil {
 		fmt.Println("Error sending SMS:", err)
