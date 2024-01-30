@@ -133,14 +133,25 @@ type Hospital struct{
 	EmpanelmentType   string
 }
 
-const pageSize = 50
+
 
 func Hospitals(w http.ResponseWriter, r *http.Request) {
 	query_params := r.URL.Query()
 	num := query_params.Get("page")
+	size := query_params.Get("size")
+	pageSize , err := strconv.Atoi(size)
 	page, err := strconv.Atoi(num)
 	offset := (page - 1) * pageSize
-	hospital_query := fmt.Sprintf("select empanelment_type, hosp_name, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in ( 'PMJAY and CAPF', 'PMJAY','Only CAPF','PMJAY and CGHS') and active_yn ='Y' and hosp_status ='Approved' LIMIT %d OFFSET %d", pageSize, offset)
+	empanelment := query_params.Get("empanelment")
+	var empanelment_type string
+	if empanelment=="PMJAY"{
+		empanelment_type = "('PMJAY and CAPF', 'PMJAY', 'PMJAY and CGHS')"
+	}else if empanelment=="CAPF"{
+		empanelment_type = "('PMJAY and CAPF', 'Only CAPF','PMJAY and CGHS')"
+	}else{
+		empanelment_type = "('PMJAY and CAPF', 'PMJAY and CGHS')"
+	}
+	hospital_query := fmt.Sprintf("select empanelment_type, hosp_name, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' LIMIT %d OFFSET %d", empanelment_type, pageSize, offset)
 	rows, _ := config.ExecuteQuery(hospital_query)
 	
 	var dataList []Hospital
