@@ -194,7 +194,29 @@ func generateOTP() string {
 }
 
 func SendOtp(w http.ResponseWriter, r *http.Request) {
-	id := r.FormValue("force_id")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Read the request body
+	body, err1 := ioutil.ReadAll(r.Body)
+	if err1 != nil {
+		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		return
+	}
+
+	// Unmarshal the JSON data into a struct
+	var requestData RequestBody
+	err1 = json.Unmarshal(body, &requestData)
+	if err1 != nil {
+		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Access the values from the struct
+	id := requestData.ForceID
+	fmt.Println(id)
 	login_q := fmt.Sprintf(`select mobile_number  
 	from capf.capf_prod_noimage_refresh 
 	where id_number='%s' and relation_name='Self'`, id)
@@ -209,6 +231,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		dataList = append(dataList, data)	
 	}
+	fmt.Println(len(dataList))
 
 	if len(dataList)==0{
 		http.Error(w, "Wrong force id", http.StatusNotFound)
@@ -216,7 +239,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	//phone_no := dataList[0].MobileNumber
+	phone_og := dataList[0].MobileNumber
 	phone_no := "7014600922"
 	//otp := generateOTP()
 	otp := "123456"
@@ -225,9 +248,9 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	success := sendSMSAPI(phone_no, otp)
 	var message string
 	if success{
-		message = fmt.Sprintf("OTP sent successfully to %s", phone_no)
+		message = fmt.Sprintf("OTP sent successfully to %s", phone_og)
 	}else{
-		message = fmt.Sprintf("Failed to send OTP to %s", phone_no)
+		message = fmt.Sprintf("Failed to send OTP to %s", phone_og)
 	}
 
 	response  := Response{

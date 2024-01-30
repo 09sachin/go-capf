@@ -80,6 +80,9 @@ type UserDetail struct {
 	Bank 			string
 	AccountNumber   string
 	Ifsc            string
+	MobileNumber    string
+	FatherName      string
+	SpouseName      string
 }
 func UserDetails(w http.ResponseWriter, r *http.Request) {
 	claims, err := getClaimsFromRequest(r)
@@ -91,7 +94,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	id := claims.Username
 	user_details_query := fmt.Sprintf(`select member_name_eng, dob, gender, 
 	id_number, id_type, pmjay_id, unit_name, account_holder_name, bank_name, bank_account_number, ifsc_code,
-	mobile_number
+	mobile_number, father_name_eng, spouse_name_eng
 	from capf.capf_prod_noimage_refresh where id_number='%s' and relation_name='Self';`, id)
 	
 	rows, _ := config.ExecuteQuery(user_details_query)
@@ -100,7 +103,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var data UserDetail
-		err := rows.Scan(&data.MemberNameEng, &data.DOB, &data.Gender, &data.Id, &data.IdType, &data.PMJAY, &data.Unit, &data.AccountHolder, &data.Bank, &data.AccountNumber, &data.Ifsc)
+		err := rows.Scan(&data.MemberNameEng, &data.DOB, &data.Gender, &data.Id, &data.IdType, &data.PMJAY, &data.Unit, &data.AccountHolder, &data.Bank, &data.AccountNumber, &data.Ifsc, &data.MobileNumber, &data.FatherName, &data.SpouseName)
 		fmt.Println(err)
 		dataList = append(dataList, data)	
 	}
