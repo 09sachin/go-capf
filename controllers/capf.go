@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
 	"encoding/json"
 	"github.com/09sachin/go-capf/config"
 	// "github.com/09sachin/go-capf/models"
@@ -89,7 +90,8 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 
 	id := claims.Username
 	user_details_query := fmt.Sprintf(`select member_name_eng, dob, gender, 
-	id_number, id_type, pmjay_id, unit_name, account_holder_name, bank_name, bank_account_number, ifsc_code 
+	id_number, id_type, pmjay_id, unit_name, account_holder_name, bank_name, bank_account_number, ifsc_code,
+	mobile_number
 	from capf.capf_prod_noimage_refresh where id_number='%s' and relation_name='Self';`, id)
 	
 	rows, _ := config.ExecuteQuery(user_details_query)
@@ -130,16 +132,22 @@ type Hospital struct{
 	HospLongitude  string
 	EmpanelmentType   string
 }
-func Hospitals(w http.ResponseWriter, r *http.Request) {
 
-	hospital_query := "select empanelment_type, hosp_name, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in ( 'PMJAY and CAPF', 'PMJAY','Only CAPF','PMJAY and CGHS') and active_yn ='Y' and hosp_status ='Approved'"
+const pageSize = 50
+
+func Hospitals(w http.ResponseWriter, r *http.Request) {
+	query_params := r.URL.Query()
+	num := query_params.Get("page")
+	page, err := strconv.Atoi(num)
+	offset := (page - 1) * pageSize
+	hospital_query := fmt.Sprintf("select empanelment_type, hosp_name, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in ( 'PMJAY and CAPF', 'PMJAY','Only CAPF','PMJAY and CGHS') and active_yn ='Y' and hosp_status ='Approved' LIMIT %d OFFSET %d", pageSize, offset)
 	rows, _ := config.ExecuteQuery(hospital_query)
 	
 	var dataList []Hospital
 
 	for rows.Next() {
 		var data Hospital
-		err := rows.Scan(&data.HospName, &data.HospLatitude, &data.HospLongitude, &data.EmpanelmentType)
+		err := rows.Scan(&data.EmpanelmentType, &data.HospName, &data.HospLatitude, &data.HospLongitude)
 		fmt.Println(err)
 		dataList = append(dataList, data)	
 	}
