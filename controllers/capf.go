@@ -198,6 +198,8 @@ type NearestHospital struct {
 func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	query_params := r.URL.Query()
 	radius := query_params.Get("radius")
+	latitude := query_params.Get("latitude")
+	longitude := query_params.Get("longitude")
 	filter_hosp := fmt.Sprintf(` SELECT hosp_name, hosp_latitude, hosp_longitude, empanelment_type
 		FROM hem_t_hosp_info
 		WHERE 
@@ -211,14 +213,14 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 				ELSE NULL 
 			END IS NOT NULL
 			AND 6371 * 2 * ASIN(SQRT(
-				POWER(SIN(RADIANS(CAST(hosp_latitude AS DOUBLE PRECISION) - CAST(18.72 AS DOUBLE PRECISION)) / 2), 2) +
+				POWER(SIN(RADIANS(CAST(hosp_latitude AS DOUBLE PRECISION) - CAST(%s AS DOUBLE PRECISION)) / 2), 2) +
 				COS(RADIANS(CAST(18.72 AS DOUBLE PRECISION))) * COS(RADIANS(CAST(hosp_latitude AS DOUBLE PRECISION))) *
-				POWER(SIN(RADIANS(CAST(hosp_longitude AS DOUBLE PRECISION) - CAST(79.97 AS DOUBLE PRECISION)) / 2), 2)
+				POWER(SIN(RADIANS(CAST(hosp_longitude AS DOUBLE PRECISION) - CAST(%s AS DOUBLE PRECISION)) / 2), 2)
 			)) <= %s
 			AND empanelment_type IN ('PMJAY and CAPF', 'PMJAY', 'Only CAPF', 'PMJAY and CGHS') 
 			AND active_yn = 'Y' 
 			AND hosp_status = 'Approved' 
-		LIMIT 10;`, radius)
+		LIMIT 10;`, latitude, longitude, radius)
 	
 	rows, _ := config.ExecuteQuery(filter_hosp)
 	
