@@ -221,8 +221,11 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	from capf.capf_prod_noimage_refresh 
 	where id_number='%s' and relation_name='Self'`, id)
 
-	rows, _ := config.ExecuteQuery(login_q)
-	
+	rows, sql_error := config.ExecuteQuery(login_q)
+	if sql_error!=nil{
+		fmt.Println(sql_error)
+		return
+	}
 	var dataList []PhoneNo
 
 	for rows.Next() {

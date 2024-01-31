@@ -35,8 +35,11 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	 FROM capf.capf_prod_noimage_refresh 
 	 WHERE id_number='%s' and relation_name='Self';`, id)
 
-	rows, _ := config.ExecuteQuery(dashboardQuery)
-	
+	rows, sql_error := config.ExecuteQuery(dashboardQuery)
+	if sql_error!=nil{
+		fmt.Println(sql_error)
+		return
+	}
 	var dataList []CapfProdNoImageRefresh
 
 	for rows.Next() {
@@ -97,8 +100,11 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	mobile_number, father_name_eng, spouse_name_eng
 	from capf.capf_prod_noimage_refresh where id_number='%s' and relation_name='Self';`, id)
 	
-	rows, _ := config.ExecuteQuery(user_details_query)
-	
+	rows, sql_error := config.ExecuteQuery(user_details_query)
+	if sql_error!=nil{
+		fmt.Println(sql_error)
+		return
+	}
 	var dataList []UserDetail
 
 	for rows.Next() {
@@ -155,8 +161,11 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 		empanelment_type = "('PMJAY and CAPF', 'PMJAY and CGHS')"
 	}
 	hospital_query := fmt.Sprintf("select empanelment_type, hosp_name, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' LIMIT %d OFFSET %d", empanelment_type, pageSize, offset)
-	rows, _ := config.ExecuteQuery(hospital_query)
-	
+	rows, sql_error := config.ExecuteQuery(hospital_query)
+	if sql_error!=nil{
+		fmt.Println(sql_error)
+		return
+	}
 	var dataList []Hospital
 
 	for rows.Next() {
@@ -222,24 +231,31 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 			AND hosp_status = 'Approved' 
 		LIMIT 10;`, latitude, longitude, radius)
 	
-	rows, _ := config.ExecuteQuery(filter_hosp)
-	
+	rows, err := config.ExecuteQuery(filter_hosp)
+	if err!=nil{
+		fmt.Println(err)
+		return
+	}
+
 	var dataList []NearestHospital
 
 	for rows.Next() {
 		var data NearestHospital
 		err := rows.Scan(&data.HospName, &data.HospLatitude, &data.HospLongitude, &data.EmpanelmentType)
-		fmt.Println(err)
+		if err!=nil{
+			fmt.Println(err)
+			continue
+		}
 		dataList = append(dataList, data)	
 	}
 
-	fmt.Println(dataList)
+	// fmt.Println(dataList)
 
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
 	fmt.Println(err)
-	fmt.Println(string(jsonData))
+	// fmt.Println(string(jsonData))
 	
 	response := JsonResponse{
 		Message: json.RawMessage(jsonData),
@@ -282,8 +298,11 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 			and reim.card_no in (select pmjay_id from capf.capf_prod_noimage_refresh where id_number='%s') and reim.ben_pending='Y' 
 			order by wa.crt_dt `, id)
 	
-	rows, _ := config.ExecuteQuery(query)
-
+	rows, sql_error := config.ExecuteQuery(query)
+	if sql_error!=nil{
+		fmt.Println(sql_error)
+		return
+	}
 	var dataList []Query
 
 	for rows.Next() {
@@ -329,8 +348,11 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	track_query := fmt.Sprintf(`select case_no, claim_sub_dt, workflow_status_desc 
 	from capf.case_dump_capf_reim_pfms 
 	where case_no='%s'`, case_no)
-	rows, _ := config.ExecuteQuery(track_query)
-	
+	rows, sql_error := config.ExecuteQuery(track_query)
+	if sql_error!=nil{
+		fmt.Println(sql_error)
+		return
+	}
 	var dataList []TrackCase
 
 	for rows.Next() {
