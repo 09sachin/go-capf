@@ -386,13 +386,63 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type UserClaim struct{
+	Name 			string
+	CaseNo    		string
+	ClaimSubDate	string
+	Status 			string
+	SubAmt 			string
+	AppAmt 			string
+	PaidAmt 		string
+}
 
 func UserClaims(w http.ResponseWriter, r *http.Request) {
-	query_params := r.URL.Query()
-	case_no := query_params.Get("case_no")
-	track_query := fmt.Sprintf(`select case_no, claim_sub_dt, workflow_status_desc 
-	from capf.case_dump_capf_reim_pfms 
-	where case_no='%s'`, case_no)
-	fmt.Println((track_query))
-	http.Redirect(w, r, "/", 301)
+	claims, err := getClaimsFromRequest(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	id := claims.Username
+	claims_query := fmt.Sprintf(`select member_name_eng, case_no, claim_sub_dt, workflow_status_desc,
+	claim_sub_amt, claim_app_amt, claim_paid_amt
+	from capf.case_dump_capf_reim_pfms rem
+	join capf.capf_prod_noimage_refresh usr on rem.card_no=usr.pmjay_id where usr.id_number='%s'`, id)
+
+	rows, sql_error := config.ExecuteQuery(claims_query)
+	if sql_error!=nil{
+		fmt.Println(sql_error)
+		return
+	}
+	var dataList []UserClaim
+
+	for rows.Next() {
+		var data UserClaim
+		err := rows.Scan(&data.Name, &data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt)
+		fmt.Println(err)
+		dataList = append(dataList, data)	
+	}
+
+	fmt.Println(dataList)
+
+
+	jsonData, err := json.MarshalIndent(dataList, "", "    ")
+
+	fmt.Println(err)
+	fmt.Println(string(jsonData))
+	
+	response := JsonResponse{
+		Message: json.RawMessage(jsonData),
+	}
+
+
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Encode the response as JSON and write it to the response writer
+	errr := json.NewEncoder(w).Encode(response)
+	if errr != nil {
+		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		return
+	}
 }

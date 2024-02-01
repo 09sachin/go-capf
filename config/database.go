@@ -11,11 +11,16 @@ import (
 
 
 var (
-	host     = getEnv("DB_HOST")
-    port     = getEnv("DB_PORT")
-    user     = getEnv("DB_USER")
-    password = getEnv("DB_PASS")
-    dbname   = getEnv("DB_NAME")
+	host      = getEnv("DB_HOST")
+    localhost = getEnv("DB_HOST_LOCAL")
+    port      = getEnv("DB_PORT")
+    localport = getEnv("DB_PORT_LOCAL")
+    user      = getEnv("DB_USER")
+    localuser = getEnv("DB_USER_LOCAL")
+    password  = getEnv("DB_PASS")
+    localpass = getEnv("DB_PASS_LOCAL")
+    dbname    = getEnv("DB_NAME")
+    localname = getEnv("DB_NAME_LOCAL")
 )
 
 func getEnv(key string) string {
@@ -47,6 +52,39 @@ func connectDB() (*sql.DB, error) {
 	return db, nil
 }
 
+func connectDBLocal() (*sql.DB, error) {
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		localhost, localport, localuser, localpass, localname)
+
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("Connected to the local database")
+	return db, nil
+}
+
+func ExecuteQueryLocal(query string, args ...interface{}) (*sql.Rows, error) {
+	db, err := connectDBLocal()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return rows, nil
+}
+
 // ExecuteQuery executes a SQL query and returns the result
 func ExecuteQuery(query string, args ...interface{}) (*sql.Rows, error) {
 	db, err := connectDB()
@@ -66,7 +104,7 @@ func ExecuteQuery(query string, args ...interface{}) (*sql.Rows, error) {
 
 // InsertData inserts data into the database using a custom query
 func InsertData(query string, args ...interface{}) error {
-    db, err := connectDB()
+    db, err := connectDBLocal()
     if err != nil {
         return err
     }

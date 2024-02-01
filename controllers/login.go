@@ -1,17 +1,18 @@
 package controllers
 
 import (
-	"fmt"
-	"strconv"
 	"encoding/json"
-	"net/url"
+	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
+	_"net/url"
+	"strconv"
+	"strings"
 	"time"
 	"github.com/09sachin/go-capf/config"
-	_"github.com/09sachin/go-capf/models"
-	"net/http"
+	_ "github.com/09sachin/go-capf/models"
 	"github.com/dgrijalva/jwt-go"
-	"io/ioutil"
 )
 
 
@@ -38,7 +39,7 @@ type PhoneNo struct {
 }
 
 type OTP struct {
-	Otp    int
+	Otp    string
 }
 
 func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
@@ -146,20 +147,25 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	id := requestData.ForceID
 	otp := requestData.OTP
 
-	// get_otp := fmt.Sprintf("select otp from login where force_id=%s", id)
+	get_otp := fmt.Sprintf("select otp from login where force_id='%s'", id)
 
-	// rows, _ := config.ExecuteQuery(get_otp)
-	
-	// var dataList []OTP
+	rows, err := config.ExecuteQueryLocal(get_otp)
+	if err!=nil{
+		fmt.Println(err)
+		return
+	}
+	var dataList []OTP
 
-	// for rows.Next() {
-	// 	var data OTP
-	// 	err := rows.Scan(&data.Otp)
-	// 	fmt.Println(err)
-	// 	dataList = append(dataList, data)	
-	// }
+	for rows.Next() {
+		var data OTP
+		err := rows.Scan(&data.Otp)
+		fmt.Println(err)
+		dataList = append(dataList, data)	
+	}
 
-	otp_stored := "123456"
+	otp_stored := dataList[0].Otp
+
+	// otp_stored := "123456"
 	fmt.Println(otp)
 
 	if otp_stored!=otp{
@@ -243,9 +249,15 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 
 
 	phone_og := dataList[0].MobileNumber
-	phone_no := "7014600922"
-	//otp := generateOTP()
-	otp := "123456"
+	phone_no := "6377035564"
+	otp := generateOTP()
+	save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
+	VALUES ('%s', '%s')
+	ON CONFLICT (force_id)
+	DO UPDATE SET otp = %s;`, id, otp, otp)
+	row:= config.InsertData(save_otp_query)
+	fmt.Println(row)
+	// otp := "123456"
 	fmt.Println(otp)
 
 	success := sendSMSAPI(phone_no, otp)
@@ -272,7 +284,9 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendSMSAPI(phoneNo, otp string) bool {
-	msg := fmt.Sprintf("Dear User,\nOTP to validate your Allied and Healthcare Institute Registry application is %s. This is One Time Password will be valid for 10 mins.\nABDM, National Health Authority", otp)
+	msg := "Dear%20User%2C%0AOTP%20to%20validate%20your%20Allied%20and%20Healthcare%20Institute%20Registry%20application%20is%20ABCDEF.%20This%20is%20One%20Time%20Password%20will%20be%20valid%20for%2010%20mins.%0AABDM%2C%20National%20Health%20Authority"
+	msg = strings.Replace(msg, "ABCDEF", otp, -1)
+	fmt.Println(msg)
 	username := "abhaotp"
 	password := "f9F3r%5D%7BS"
 	entityID := "1001548700000010184"
@@ -280,8 +294,7 @@ func sendSMSAPI(phoneNo, otp string) bool {
 	source := "NHASMS"
 
 	urlStr := fmt.Sprintf("https://sms6.rmlconnect.net:8443/bulksms/bulksms?username=%s&password=%s&type=0&dlr=1&destination=%s&source=%s&message=%s&entityid=%s&tempid=%s",
-		url.QueryEscape(username), url.QueryEscape(password), url.QueryEscape(phoneNo),
-		url.QueryEscape(source), url.QueryEscape(msg), url.QueryEscape(entityID), url.QueryEscape(tempID))
+		username, password, phoneNo, source, msg, entityID, tempID)
 	
 	response, err := http.Post(urlStr, "application/json", nil)
 	if err != nil {
