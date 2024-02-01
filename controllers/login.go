@@ -250,14 +250,15 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 
 	phone_og := dataList[0].MobileNumber
 	phone_no := "6377035564"
-	otp := generateOTP()
+	// otp := generateOTP()
+	otp := "123456"
 	save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
 	VALUES ('%s', '%s')
 	ON CONFLICT (force_id)
 	DO UPDATE SET otp = %s;`, id, otp, otp)
 	row:= config.InsertData(save_otp_query)
 	fmt.Println(row)
-	// otp := "123456"
+	
 	fmt.Println(otp)
 
 	success := sendSMSAPI(phone_no, otp)
@@ -286,14 +287,14 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 func sendSMSAPI(phoneNo, otp string) bool {
 	msg := "Dear%20User%2C%0AOTP%20to%20validate%20your%20Allied%20and%20Healthcare%20Institute%20Registry%20application%20is%20ABCDEF.%20This%20is%20One%20Time%20Password%20will%20be%20valid%20for%2010%20mins.%0AABDM%2C%20National%20Health%20Authority"
 	msg = strings.Replace(msg, "ABCDEF", otp, -1)
-	fmt.Println(msg)
+	// fmt.Println(msg)
 	username := "abhaotp"
 	password := "f9F3r%5D%7BS"
 	entityID := "1001548700000010184"
 	tempID := "1007169865765792689"
 	source := "NHASMS"
 
-	urlStr := fmt.Sprintf("https://sms6.rmlconnect.net:8443/bulksms/bulksms?username=%s&password=%s&type=0&dlr=1&destination=%s&source=%s&message=%s&entityid=%s&tempid=%s",
+	urlStr := fmt.Sprintf("https://sms6.rmlconnect.net/bulksms/bulksms?username=%s&password=%s&type=0&dlr=1&destination=%s&source=%s&message=%s&entityid=%s&tempid=%s",
 		username, password, phoneNo, source, msg, entityID, tempID)
 	
 	response, err := http.Post(urlStr, "application/json", nil)
