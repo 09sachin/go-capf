@@ -28,6 +28,8 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	//id := "913228862"
 
 	id := claims.Username
+	pmjay := claims.PmjayId
+	fmt.Println(pmjay)
 
 
 	dashboardQuery := fmt.Sprintf(`SELECT member_name_eng, year_of_birth, dob, gender,
@@ -287,6 +289,7 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := claims.Username
+	pmjay := claims.PmjayId
 	fmt.Println(id)
 
 	query := fmt.Sprintf(`select  wa.remarks, 
@@ -295,8 +298,8 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 			join capf.case_dump_capf_reim_pfms reim 
 			on reim.patient_no=wa.transaction_id 
 			where wa.current_group_id in ('GP603', 'GPSHA', 'GPMD', 'GPBANK') 
-			and reim.card_no in (select pmjay_id from capf.capf_prod_noimage_refresh where id_number='%s') and reim.ben_pending='Y' 
-			order by wa.crt_dt `, id)
+			and reim.card_no in %s and reim.ben_pending='Y' 
+			order by wa.crt_dt `, pmjay)
 	
 	rows, sql_error := config.ExecuteQuery(query)
 	if sql_error!=nil{
@@ -345,9 +348,16 @@ type TrackCase struct{
 func TrackCases(w http.ResponseWriter, r *http.Request) {
 	query_params := r.URL.Query()
 	case_no := query_params.Get("case_no")
+	claims, err := getClaimsFromRequest(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	pmjay := claims.PmjayId
 	track_query := fmt.Sprintf(`select case_no, claim_sub_dt, workflow_status_desc 
 	from capf.case_dump_capf_reim_pfms 
-	where case_no='%s'`, case_no)
+	where case_no='%s' and card_no in %s`, case_no, pmjay)
 	rows, sql_error := config.ExecuteQuery(track_query)
 	if sql_error!=nil{
 		fmt.Println(sql_error)

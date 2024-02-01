@@ -21,6 +21,7 @@ var jwtKey = []byte("your-secret-key")
 // Claims structure to represent the data that will be encoded to create the JWT
 type TokenClaim struct {
 	Username string `json:"username"`
+	PmjayId string `json:"pmjayid"`
 	jwt.StandardClaims
 }
 
@@ -36,6 +37,10 @@ type JsonResponse struct {
 
 type PhoneNo struct {
 	MobileNumber    string
+}
+
+type Pmjay struct {
+	PmjayId    string
 }
 
 type OTP struct {
@@ -62,11 +67,12 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func createToken(username string) (string, error) {
+func createToken(username string, pmjay string) (string, error) {
 	expirationTime := time.Now().Add(120 * time.Minute)
 
 	claims := &TokenClaim{
 		Username: username,
+		PmjayId: pmjay,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -122,6 +128,18 @@ type PmjayQuery struct{
 	PMJAY string
 }
 
+
+func formatStringSlice(slice []string) string {
+	result := ""
+	for i, value := range slice {
+		result += fmt.Sprintf("'%s'", value)
+		if i < len(slice)-1 {
+			result += ", "
+		}
+	}
+	return result
+}
+
 func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -173,7 +191,28 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, _ := createToken(id)
+	pmjay_q := fmt.Sprintf(`select distinct pmjay_id  
+	from capf.capf_prod_noimage_refresh 
+	where id_number='%s'`, id)
+
+	rows, sql_error := config.ExecuteQuery(pmjay_q)
+	if sql_error!=nil{
+		fmt.Println(sql_error)
+		return
+	}
+	var pmjayids []string
+	for rows.Next() {
+		var pmjayid string
+		err := rows.Scan(&pmjayid)
+		if err != nil {
+			return
+		}
+		pmjayids = append(pmjayids, pmjayid)
+	}
+
+	str := "(" + formatStringSlice(pmjayids) + ")"
+	
+	token, _ := createToken(id, str)
 
 	response  := Response{
 		Message:  token,
