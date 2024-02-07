@@ -184,7 +184,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	otp_stored := dataList[0].Otp
 
 	// otp_stored := "123456"
-	fmt.Println(otp)
+	// fmt.Println(otp)
 
 	if otp_stored!=otp{
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -298,7 +298,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	row:= config.InsertData(save_otp_query)
 	fmt.Println(row)
 	
-	fmt.Println(otp)
+	// fmt.Println(otp)
 
 	success := sendSMSAPI(phone_no, otp)
 	var message string

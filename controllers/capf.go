@@ -28,9 +28,6 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	//id := "913228862"
 
 	id := claims.Username
-	pmjay := claims.PmjayId
-	fmt.Println(pmjay)
-
 
 	dashboardQuery := fmt.Sprintf(`SELECT member_name_eng, year_of_birth, dob, gender,
 	 insertion_date, mobile_number, id_number 
@@ -315,13 +312,13 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 		dataList = append(dataList, data)	
 	}
 
-	fmt.Println(dataList)
+	// fmt.Println(dataList)
 
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
 	fmt.Println(err)
-	fmt.Println(string(jsonData))
+	// fmt.Println(string(jsonData))
 	
 	response := JsonResponse{
 		Message: json.RawMessage(jsonData),
@@ -344,10 +341,12 @@ type TrackCase struct{
 	CaseNo string
 	ClaimSubmissionDate string
 	Status string
+	WorkflowDate string
 }
 func TrackCases(w http.ResponseWriter, r *http.Request) {
 	query_params := r.URL.Query()
 	case_no := query_params.Get("case_no")
+	fmt.Println(case_no)
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -355,9 +354,42 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pmjay := claims.PmjayId
-	track_query := fmt.Sprintf(`select case_no, claim_sub_dt, workflow_status_desc 
-	from capf.case_dump_capf_reim_pfms 
-	where case_no='%s' and card_no in %s`, case_no, pmjay)
+	fmt.Println(pmjay)
+	track_query := fmt.Sprintf(`SELECT 
+		reimb.case_no,
+		reimb.claim_sub_dt,
+		workflow.process_desc,
+		wa.crt_dt
+	FROM 
+		capf.tms_t_case_workflow_audit wa
+	JOIN 
+		capf.case_dump_capf_reim_pfms reimb
+	ON 
+		wa.transaction_id = reimb.patient_no
+	JOIN (
+		WITH RankedWorkflows AS (
+			SELECT 
+				*,
+				ROW_NUMBER() OVER (PARTITION BY workflow_id ORDER BY crt_dt) AS row_num
+			FROM 
+				master.tms_m_case_workflow_new
+			WHERE 
+				state_code = '91'
+		)
+		SELECT 
+			*
+		FROM 
+			RankedWorkflows
+		WHERE 
+			row_num = 1
+	) workflow
+	ON 
+		wa.current_workflow_id = workflow.workflow_id
+	WHERE 
+		reimb.case_no = '%s' and 
+		reimb.card_no in %s
+	ORDER BY 
+    wa.crt_dt DESC;`, case_no, pmjay)
 	rows, sql_error := config.ExecuteQuery(track_query)
 	if sql_error!=nil{
 		fmt.Println(sql_error)
@@ -367,18 +399,18 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var data TrackCase
-		err := rows.Scan(&data.CaseNo, &data.ClaimSubmissionDate, &data.Status)
+		err := rows.Scan(&data.CaseNo, &data.ClaimSubmissionDate, &data.Status, &data.WorkflowDate)
 		fmt.Println(err)
 		dataList = append(dataList, data)	
 	}
 
-	fmt.Println(dataList)
+	// fmt.Println(dataList)
 
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
 	fmt.Println(err)
-	fmt.Println(string(jsonData))
+	// fmt.Println(string(jsonData))
 	
 	response := JsonResponse{
 		Message: json.RawMessage(jsonData),
@@ -414,10 +446,37 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := claims.Username
-	claims_query := fmt.Sprintf(`select member_name_eng, case_no, claim_sub_dt, workflow_status_desc,
-	claim_sub_amt, claim_app_amt, claim_paid_amt
-	from capf.case_dump_capf_reim_pfms rem
-	join capf.capf_prod_noimage_refresh usr on rem.card_no=usr.pmjay_id where usr.id_number='%s'`, id)
+	claims_query := fmt.Sprintf(`SELECT 
+    usr.member_name_eng, 
+    rem.case_no, 
+    rem.claim_sub_dt, 
+    rw.process_desc,
+    rem.claim_sub_amt, 
+    rem.claim_app_amt, 
+    rem.claim_paid_amt
+FROM 
+    capf.case_dump_capf_reim_pfms rem
+JOIN 
+    capf.capf_prod_noimage_refresh usr ON rem.card_no = usr.pmjay_id
+JOIN (
+	WITH RankedWorkflows AS (
+		SELECT 
+			*,
+			ROW_NUMBER() OVER (PARTITION BY workflow_id ORDER BY crt_dt) AS row_num
+		FROM 
+			master.tms_m_case_workflow_new
+		WHERE 
+			state_code = '91'
+	)
+	SELECT 
+		*
+	FROM 
+		RankedWorkflows
+	WHERE 
+		row_num = 1
+) rw ON rem.workflow_id = rw.workflow_id
+WHERE 
+    usr.id_number = '%s';`, id)
 
 	rows, sql_error := config.ExecuteQuery(claims_query)
 	if sql_error!=nil{
@@ -433,7 +492,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 		dataList = append(dataList, data)	
 	}
 
-	fmt.Println(dataList)
+	// fmt.Println(dataList)
 
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
