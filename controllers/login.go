@@ -44,28 +44,29 @@ type Pmjay struct {
 }
 
 type OTP struct {
-	Otp    string
+	Otp    	   string
+	Created_at time.Time   
 }
 
-func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		tokenString := r.Header.Get("Authorization")
+// func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		tokenString := r.Header.Get("Authorization")
 
-		if tokenString == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
+// 		if tokenString == "" {
+// 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+// 			return
+// 		}
 
-		_, err := validateToken(tokenString)
-		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
+// 		_, err := validateToken(tokenString)
+// 		if err != nil {
+// 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+// 			return
+// 		}
 
-		// If the token is valid, proceed to the next handler
-		next.ServeHTTP(w, r)
-	}
-}
+// 		// If the token is valid, proceed to the next handler
+// 		next.ServeHTTP(w, r)
+// 	}
+// }
 
 func createToken(username string, pmjay string) (string, error) {
 	expirationTime := time.Now().Add(120 * time.Minute)
@@ -98,7 +99,7 @@ func validateToken(tokenString string) (*TokenClaim, error) {
 
 	claims, ok := token.Claims.(*TokenClaim)
 	if !ok || !token.Valid {
-		return nil, fmt.Errorf("Invalid token")
+		return nil, fmt.Errorf("invalid token")
 	}
 
 	return claims, nil
@@ -108,12 +109,12 @@ func validateToken(tokenString string) (*TokenClaim, error) {
 func getClaimsFromRequest(r *http.Request) (*TokenClaim, error) {
 	tokenString := r.Header.Get("Authorization")
 	if tokenString == "" {
-		return nil, fmt.Errorf("No token provided")
+		return nil, fmt.Errorf("no token provided")
 	}
 
 	claims, err := validateToken(tokenString)
 	if err != nil {
-		return nil, fmt.Errorf("Invalid token: %v", err)
+		return nil, fmt.Errorf("invalid token: %v", err)
 	}
 
 	return claims, nil
@@ -165,7 +166,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	id := requestData.ForceID
 	otp := requestData.OTP
 
-	get_otp := fmt.Sprintf("select otp from login where force_id='%s'", id)
+	get_otp := fmt.Sprintf("select otp, updated_at from login where force_id='%s'", id)
 
 	rows, err := config.ExecuteQueryLocal(get_otp)
 	if err!=nil{
@@ -176,18 +177,25 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var data OTP
-		err := rows.Scan(&data.Otp)
+		err := rows.Scan(&data.Otp, &data.Created_at)
 		fmt.Println(err)
 		dataList = append(dataList, data)	
 	}
 
 	otp_stored := dataList[0].Otp
+	exp_time := dataList[0].Created_at.Add(10 * time.Minute) 
 
 	// otp_stored := "123456"
 	// fmt.Println(otp)
 
 	if otp_stored!=otp{
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Wrong otp. Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	current_time := (time.Now().UTC().Add(330*time.Minute))
+	if exp_time.Before(current_time){
+		http.Error(w, "OTP expired", http.StatusUnauthorized)
 		return
 	}
 

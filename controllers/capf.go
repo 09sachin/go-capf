@@ -147,8 +147,8 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	query_params := r.URL.Query()
 	num := query_params.Get("page")
 	size := query_params.Get("size")
-	pageSize , err := strconv.Atoi(size)
-	page, err := strconv.Atoi(num)
+	pageSize , _ := strconv.Atoi(size)
+	page, _ := strconv.Atoi(num)
 	offset := (page - 1) * pageSize
 	empanelment := query_params.Get("empanelment")
 	var empanelment_type string
