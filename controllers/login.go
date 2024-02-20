@@ -332,13 +332,13 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendSMSAPI(phoneNo, otp string) bool {
-	msg := "Dear%20User%2C%0AOTP%20to%20validate%20your%20Allied%20and%20Healthcare%20Institute%20Registry%20application%20is%20ABCDEF.%20This%20is%20One%20Time%20Password%20will%20be%20valid%20for%2010%20mins.%0AABDM%2C%20National%20Health%20Authority"
+	msg := "Dear%20User%2C%0AYour%20OTP%20to%20access%20CAPF%20application%20is%20ABCDEF.%20It%20will%20be%20valid%20for%203%20minutes.%0ANHA"
 	msg = strings.Replace(msg, "ABCDEF", otp, -1)
 	// fmt.Println(msg)
 	username := "abhaotp"
 	password := "f9F3r%5D%7BS"
 	entityID := "1001548700000010184"
-	tempID := "1007169865765792689"
+	tempID := "1007170748130898041"
 	source := "NHASMS"
 
 	urlStr := fmt.Sprintf("https://sms6.rmlconnect.net/bulksms/bulksms?username=%s&password=%s&type=0&dlr=1&destination=%s&source=%s&message=%s&entityid=%s&tempid=%s",
