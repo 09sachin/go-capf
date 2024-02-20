@@ -296,7 +296,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 
 
 	phone_og := dataList[0].MobileNumber
-	phone_no := "7014600922"
+	// phone_no := "7014600922"
 	otp := generateOTP()
 	//otp := "123456"
 	save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
@@ -308,7 +308,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	
 	// fmt.Println(otp)
 
-	success := sendSMSAPI(phone_no, otp)
+	success := sendSMSAPI(phone_og, otp)
 	var message string
 	if success{
 		message = fmt.Sprintf("OTP sent successfully to %s", phone_og)
