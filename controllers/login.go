@@ -141,16 +141,20 @@ func formatStringSlice(slice []string) string {
 	return result
 }
 
-func OtpLogin(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+func errorMessage(msg string) string{
+	errorResponse := map[string]string{"error": msg}
+	errorJSON, _ := json.Marshal(errorResponse)
+	return string(errorJSON)
+}
 
-	// Read the request body
+func OtpLogin(w http.ResponseWriter, r *http.Request) {
+	/// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		errorJSON := errorMessage("Error reading request body")
+		http.Error(w, errorJSON, http.StatusInternalServerError)
 		return
 	}
 
@@ -158,7 +162,8 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	var requestData RequestBody
 	err = json.Unmarshal(body, &requestData)
 	if err != nil {
-		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+		errorJSON := errorMessage("Error decoding JSON")
+		http.Error(w, errorJSON, http.StatusBadRequest)
 		return
 	}
 
@@ -169,8 +174,9 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	get_otp := fmt.Sprintf("select otp, updated_at from login where force_id='%s'", id)
 
 	rows, err := config.ExecuteQueryLocal(get_otp)
-	if err!=nil{
-		fmt.Println(err)
+	if err != nil {
+		errorJSON := errorMessage("Local database down/error")
+		http.Error(w, errorJSON, http.StatusBadRequest)
 		return
 	}
 	var dataList []OTP
@@ -178,7 +184,9 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var data OTP
 		err := rows.Scan(&data.Otp, &data.Created_at)
-		fmt.Println(err)
+		if err!=nil{
+			fmt.Println(err)
+		}
 		dataList = append(dataList, data)	
 	}
 
@@ -186,16 +194,17 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	exp_time := dataList[0].Created_at.Add(10 * time.Minute) 
 
 	// otp_stored := "123456"
-	// fmt.Println(otp)
 
 	if otp_stored!=otp{
-		http.Error(w, "Wrong otp. Unauthorized", http.StatusUnauthorized)
+		errorJSON := errorMessage("Incorrect OTP")
+		http.Error(w, errorJSON, http.StatusBadRequest)
 		return
 	}
 
 	current_time := (time.Now().UTC().Add(330*time.Minute))
 	if exp_time.Before(current_time){
-		http.Error(w, "OTP expired", http.StatusUnauthorized)
+		errorJSON := errorMessage("OTP expired, please resend OTP")
+		http.Error(w, errorJSON, http.StatusBadRequest)
 		return
 	}
 
@@ -205,7 +214,8 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 
 	rows, sql_error := config.ExecuteQuery(pmjay_q)
 	if sql_error!=nil{
-		fmt.Println(sql_error)
+		errorJSON := errorMessage("Database connection could not be established")
+		http.Error(w, errorJSON, http.StatusBadRequest)
 		return
 	}
 	var pmjayids []string
@@ -226,13 +236,12 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		Message:  token,
 	}
 
-	// Set the Content-Type header to application/json
-	w.Header().Set("Content-Type", "application/json")
-
+	
 	// Encode the response as JSON and write it to the response writer
 	err2 := json.NewEncoder(w).Encode(response)
 	if err2 != nil {
-		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		errorJSON := errorMessage("json encoding error")
+		http.Error(w, errorJSON, http.StatusBadRequest)
 		return
 	}
 }
@@ -247,15 +256,13 @@ func generateOTP() string {
 }
 
 func SendOtp(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+	w.Header().Set("Content-Type", "application/json")
 
 	// Read the request body
 	body, err1 := ioutil.ReadAll(r.Body)
 	if err1 != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		errorJSON := errorMessage("Error reading request body")
+		http.Error(w, errorJSON, http.StatusInternalServerError)
 		return
 	}
 
@@ -263,20 +270,22 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	var requestData RequestBody
 	err1 = json.Unmarshal(body, &requestData)
 	if err1 != nil {
-		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+		errorJSON := errorMessage("Error decoding JSON")
+		http.Error(w, errorJSON, http.StatusBadRequest)
 		return
 	}
 
 	// Access the values from the struct
 	id := requestData.ForceID
-	fmt.Println(id)
+
 	login_q := fmt.Sprintf(`select mobile_number  
 	from capf.capf_prod_noimage_refresh 
 	where id_number='%s' and relation_name='Self'`, id)
 
 	rows, sql_error := config.ExecuteQuery(login_q)
 	if sql_error!=nil{
-		fmt.Println(sql_error)
+		errorJSON := errorMessage("Database connection could not be established")
+		http.Error(w, errorJSON, http.StatusBadRequest)
 		return
 	}
 	var dataList []PhoneNo
@@ -284,19 +293,21 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var data PhoneNo
 		err := rows.Scan(&data.MobileNumber)
-		fmt.Println(err)
+		if err!=nil{
+			fmt.Println(err)
+		}
 		dataList = append(dataList, data)	
 	}
-	fmt.Println(len(dataList))
 
 	if len(dataList)==0{
-		http.Error(w, "Wrong force id", http.StatusNotFound)
+		errorJSON := errorMessage("Wrong force id")
+		http.Error(w, errorJSON, http.StatusNotFound)
 		return
 	}
 
 
 	phone_og := dataList[0].MobileNumber
-	// phone_no := "7014600922"
+	// phone_og := "7014600922"
 	otp := generateOTP()
 	//otp := "123456"
 	save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
@@ -306,7 +317,6 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	row:= config.InsertData(save_otp_query)
 	fmt.Println(row)
 	
-	// fmt.Println(otp)
 
 	success := sendSMSAPI(phone_og, otp)
 	var message string
@@ -314,6 +324,12 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 		message = fmt.Sprintf("OTP sent successfully to %s", phone_og)
 	}else{
 		message = fmt.Sprintf("Failed to send OTP to %s", phone_og)
+	}
+
+	if !success{
+		errorJSON := errorMessage("Failed to send OTP, please try again")
+		http.Error(w, errorJSON, http.StatusNotFound)
+		return
 	}
 
 	response  := Response{
@@ -326,7 +342,8 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	// Encode the response as JSON and write it to the response writer
 	err := json.NewEncoder(w).Encode(response)
 	if err != nil {
-		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		errorJSON := errorMessage("Error encoding JSON")
+		http.Error(w, errorJSON, http.StatusInternalServerError)
 		return
 	}
 }

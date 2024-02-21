@@ -48,7 +48,6 @@ func connectDB() (*sql.DB, error) {
 		return nil, err
 	}
 
-	fmt.Println("Connected to the database")
 	return db, nil
 }
 
@@ -66,7 +65,6 @@ func connectDBLocal() (*sql.DB, error) {
 		return nil, err
 	}
 
-	fmt.Println("Connected to the local database")
 	return db, nil
 }
 
