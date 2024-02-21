@@ -338,8 +338,8 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	// phone_og := dataList[0].MobileNumber
-	phone_og := "7014600922"
+	phone_og := dataList[0].MobileNumber
+	// phone_og := "7014600922"
 	otp := generateOTP()
 	//otp := "123456"
 	save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
