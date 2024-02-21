@@ -25,8 +25,11 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		errorJSON := errorMessage("Unauthorised request")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Unauthorised request",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 	//id := "913228862"
@@ -40,8 +43,11 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 	rows, sql_error := config.ExecuteQuery(dashboardQuery)
 	if sql_error!=nil{
-		errorJSON := errorMessage("Database connection could not be established")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Database connection could not be established",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 	var dataList []CapfProdNoImageRefresh
@@ -69,8 +75,11 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		errorJSON := errorMessage("json encoding error")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Error encoding JSON",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -100,8 +109,11 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		errorJSON := errorMessage("Unauthorised request")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Unauthorised request",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -113,8 +125,11 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	
 	rows, sql_error := config.ExecuteQuery(user_details_query)
 	if sql_error!=nil{
-		errorJSON := errorMessage("Database connection could not be established")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Database connection could not be established",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 	var dataList []UserDetail
@@ -143,8 +158,11 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		errorJSON := errorMessage("json encoding error")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Error encoding JSON",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 }
@@ -165,8 +183,11 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 
 	_, err := getClaimsFromRequest(r)
 	if err != nil {
-		errorJSON := errorMessage("Unauthorised request")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Unauthorised request",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -188,8 +209,11 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	hospital_query := fmt.Sprintf("select empanelment_type, hosp_name, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' LIMIT %d OFFSET %d", empanelment_type, pageSize, offset)
 	rows, sql_error := config.ExecuteQuery(hospital_query)
 	if sql_error!=nil{
-		errorJSON := errorMessage("Database connection could not be established")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Database connection could not be established",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 	var dataList []Hospital
@@ -216,8 +240,11 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		errorJSON := errorMessage("json encoding error")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Error encoding JSON",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 }
@@ -237,8 +264,11 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 
 	_, err := getClaimsFromRequest(r)
 	if err != nil {
-		errorJSON := errorMessage("Unauthorised request")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Unauthorised request",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -270,8 +300,11 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	
 	rows, err := config.ExecuteQuery(filter_hosp)
 	if err!=nil{
-		errorJSON := errorMessage("Database connection could not be established")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Database connection could not be established",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -300,8 +333,11 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		errorJSON := errorMessage("json encoding error")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Error encoding JSON",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 }
@@ -318,8 +354,11 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		errorJSON := errorMessage("Unauthorised request")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Unauthorised request",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -338,8 +377,11 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	
 	rows, sql_error := config.ExecuteQuery(query)
 	if sql_error!=nil{
-		errorJSON := errorMessage("Database connection could not be established")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Database connection could not be established",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 	var dataList []Query
@@ -368,8 +410,11 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		errorJSON := errorMessage("json encoding error")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Error encoding JSON",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 }
@@ -389,8 +434,11 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	case_no := query_params.Get("case_no")
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		errorJSON := errorMessage("Unauthorised request")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Unauthorised request",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -432,8 +480,11 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
     wa.crt_dt DESC;`, case_no, pmjay)
 	rows, sql_error := config.ExecuteQuery(track_query)
 	if sql_error!=nil{
-		errorJSON := errorMessage("Database connection could not be established")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Database connection could not be established",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 	var dataList []TrackCase
@@ -459,8 +510,11 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		errorJSON := errorMessage("json encoding error")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Error encoding JSON",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 }
@@ -481,8 +535,11 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		errorJSON := errorMessage("Unauthorised request")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Unauthorised request",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -521,16 +578,16 @@ WHERE
 
 	rows, sql_error := config.ExecuteQuery(claims_query)
 	if sql_error!=nil{
-		errorJSON := errorMessage("Database connection could not be established")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Database connection could not be established",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 	var dataList []UserClaim
 
-	i := 0
 	for rows.Next() {
-		fmt.Println(i)
-		i += 1
 		var data UserClaim
 		err := rows.Scan(&data.Name, &data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt)
 		if err!=nil{
@@ -552,8 +609,11 @@ WHERE
 	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		errorJSON := errorMessage("json encoding error")
-		http.Error(w, errorJSON, http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Error encoding JSON",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 }
