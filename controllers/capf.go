@@ -204,7 +204,16 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	} else {
 		empanelment_type = "('PMJAY and CAPF', 'PMJAY and CGHS')"
 	}
-	hospital_query := fmt.Sprintf("select empanelment_type, hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' and state='%s' and district='%s' LIMIT %d OFFSET %d", empanelment_type, state, distict, pageSize, offset)
+
+	var hospital_query string
+	if distict!=""{
+		hospital_query = fmt.Sprintf("select empanelment_type, hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' and state='%s' and district='%s' LIMIT %d OFFSET %d", empanelment_type, state, distict, pageSize, offset)
+	}else{
+		hospital_query = fmt.Sprintf("select empanelment_type, hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' and state='%s' LIMIT %d OFFSET %d", empanelment_type, state, pageSize, offset)
+	}
+
+	fmt.Println(hospital_query)
+
 	rows, sql_error := config.ExecuteQuery(hospital_query)
 	if sql_error != nil {
 		w.WriteHeader(http.StatusNotFound)
