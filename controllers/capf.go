@@ -1,22 +1,22 @@
 package controllers
 
 import (
-	"fmt"
-	"strconv"
 	"encoding/json"
+	"fmt"
 	"github.com/09sachin/go-capf/config"
+	"strconv"
 	// "github.com/09sachin/go-capf/models"
 	"net/http"
 )
 
 type CapfProdNoImageRefresh struct {
-	MemberNameEng   string
-	YearOfBirth     int // Assuming it's an integer; adjust based on your schema
-	DOB             string
-	Gender          string
-	InsertionDate   string
-	MobileNumber    string
-	Id              string
+	MemberNameEng string
+	YearOfBirth   int // Assuming it's an integer; adjust based on your schema
+	DOB           string
+	Gender        string
+	InsertionDate string
+	MobileNumber  string
+	Id            string
 }
 
 func DashboardData(w http.ResponseWriter, r *http.Request) {
@@ -26,8 +26,8 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Unauthorised request",
+		response := ErrorResponse{
+			Error: "Unauthorised request",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -42,10 +42,10 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	 WHERE id_number='%s' and relation_name='Self';`, id)
 
 	rows, sql_error := config.ExecuteQuery(dashboardQuery)
-	if sql_error!=nil{
+	if sql_error != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Database connection could not be established",
+		response := ErrorResponse{
+			Error: "Database connection could not be established",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -55,19 +55,18 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var data CapfProdNoImageRefresh
 		err := rows.Scan(&data.MemberNameEng, &data.YearOfBirth, &data.DOB, &data.Gender, &data.InsertionDate, &data.MobileNumber, &data.Id)
-		if err!=nil{
+		if err != nil {
 			fmt.Println(err)
 		}
-		dataList = append(dataList, data)	
+		dataList = append(dataList, data)
 	}
-
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
-	if err!=nil{
+	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	response := JsonResponse{
 		Message: json.RawMessage(jsonData),
 	}
@@ -76,8 +75,8 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Error encoding JSON",
+		response := ErrorResponse{
+			Error: "Error encoding JSON",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -85,22 +84,21 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 }
 
-
 type UserDetail struct {
-	MemberNameEng   string
-	DOB             string
-	Gender          string
-	Id              string
-	IdType          string
-	PMJAY			string
-	Unit			string
-	AccountHolder   string
-	Bank 			string
-	AccountNumber   string
-	Ifsc            string
-	MobileNumber    string
-	FatherName      string
-	SpouseName      string
+	MemberNameEng string
+	DOB           string
+	Gender        string
+	Id            string
+	IdType        string
+	PMJAY         string
+	Unit          string
+	AccountHolder string
+	Bank          string
+	AccountNumber string
+	Ifsc          string
+	MobileNumber  string
+	FatherName    string
+	SpouseName    string
 }
 
 func UserDetails(w http.ResponseWriter, r *http.Request) {
@@ -110,8 +108,8 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Unauthorised request",
+		response := ErrorResponse{
+			Error: "Unauthorised request",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -122,12 +120,12 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	id_number, id_type, pmjay_id, unit_name, account_holder_name, bank_name, bank_account_number, ifsc_code,
 	mobile_number, father_name_eng, spouse_name_eng
 	from capf.capf_prod_noimage_refresh where id_number='%s' and relation_name='Self';`, id)
-	
+
 	rows, sql_error := config.ExecuteQuery(user_details_query)
-	if sql_error!=nil{
+	if sql_error != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Database connection could not be established",
+		response := ErrorResponse{
+			Error: "Database connection could not be established",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -137,45 +135,41 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var data UserDetail
 		err := rows.Scan(&data.MemberNameEng, &data.DOB, &data.Gender, &data.Id, &data.IdType, &data.PMJAY, &data.Unit, &data.AccountHolder, &data.Bank, &data.AccountNumber, &data.Ifsc, &data.MobileNumber, &data.FatherName, &data.SpouseName)
-		if err!=nil{
+		if err != nil {
 			fmt.Println(err)
 		}
-		dataList = append(dataList, data)	
+		dataList = append(dataList, data)
 	}
-
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
-	if err!=nil{
+	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	response := JsonResponse{
 		Message: json.RawMessage(jsonData),
 	}
 
-	
 	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Error encoding JSON",
+		response := ErrorResponse{
+			Error: "Error encoding JSON",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
 	}
 }
 
-
-type Hospital struct{
-	HospName   string 
-	HospLatitude   string
-	HospLongitude  string
-	EmpanelmentType   string
+type Hospital struct {
+	HospName        string
+	HospContact		string
+	HospLatitude    string
+	HospLongitude   string
+	EmpanelmentType string
 }
-
-
 
 func Hospitals(w http.ResponseWriter, r *http.Request) {
 	// Set the Content-Type header to application/json
@@ -184,8 +178,8 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	_, err := getClaimsFromRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Unauthorised request",
+		response := ErrorResponse{
+			Error: "Unauthorised request",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -194,24 +188,26 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	query_params := r.URL.Query()
 	num := query_params.Get("page")
 	size := query_params.Get("size")
-	pageSize , _ := strconv.Atoi(size)
+	state := query_params.Get("state")
+	distict := query_params.Get("district")
+	pageSize, _ := strconv.Atoi(size)
 	page, _ := strconv.Atoi(num)
 	offset := (page - 1) * pageSize
 	empanelment := query_params.Get("empanelment")
 	var empanelment_type string
-	if empanelment=="PMJAY"{
+	if empanelment == "PMJAY" {
 		empanelment_type = "('PMJAY and CAPF', 'PMJAY', 'PMJAY and CGHS')"
-	}else if empanelment=="CAPF"{
+	} else if empanelment == "CAPF" {
 		empanelment_type = "('PMJAY and CAPF', 'Only CAPF','PMJAY and CGHS')"
-	}else{
+	} else {
 		empanelment_type = "('PMJAY and CAPF', 'PMJAY and CGHS')"
 	}
-	hospital_query := fmt.Sprintf("select empanelment_type, hosp_name, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' LIMIT %d OFFSET %d", empanelment_type, pageSize, offset)
+	hospital_query := fmt.Sprintf("select empanelment_type, hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' and state='%s' and district='%s' LIMIT %d OFFSET %d", empanelment_type, state, distict, pageSize, offset)
 	rows, sql_error := config.ExecuteQuery(hospital_query)
-	if sql_error!=nil{
+	if sql_error != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Database connection could not be established",
+		response := ErrorResponse{
+			Error: "Database connection could not be established",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -220,19 +216,19 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var data Hospital
-		err := rows.Scan(&data.EmpanelmentType, &data.HospName, &data.HospLatitude, &data.HospLongitude)
-		if err!=nil{
+		err := rows.Scan(&data.EmpanelmentType, &data.HospName, &data.HospContact, &data.HospLatitude, &data.HospLongitude)
+		if err != nil {
 			fmt.Println(err)
 		}
-		dataList = append(dataList, data)	
+		dataList = append(dataList, data)
 	}
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
-	if err!=nil{
+	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	response := JsonResponse{
 		Message: json.RawMessage(jsonData),
 	}
@@ -241,22 +237,21 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Error encoding JSON",
+		response := ErrorResponse{
+			Error: "Error encoding JSON",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
 	}
 }
 
-
 type NearestHospital struct {
-	HospName   string 
-	HospLatitude   string
-	HospLongitude  string
-	EmpanelmentType   string
+	HospName        string
+	HospContact     string
+	HospLatitude    string
+	HospLongitude   string
+	EmpanelmentType string
 }
-
 
 func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	// Set the Content-Type header to application/json
@@ -265,8 +260,8 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	_, err := getClaimsFromRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Unauthorised request",
+		response := ErrorResponse{
+			Error: "Unauthorised request",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -276,7 +271,7 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	radius := query_params.Get("radius")
 	latitude := query_params.Get("latitude")
 	longitude := query_params.Get("longitude")
-	filter_hosp := fmt.Sprintf(` SELECT hosp_name, hosp_latitude, hosp_longitude, empanelment_type
+	filter_hosp := fmt.Sprintf(` SELECT hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude, empanelment_type
 		FROM hem_t_hosp_info
 		WHERE 
 			CASE WHEN hosp_latitude ~ '^-?\d+(\.\d+)?$' 
@@ -297,12 +292,12 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 			AND active_yn = 'Y' 
 			AND hosp_status = 'Approved' 
 		LIMIT 10;`, latitude, longitude, radius)
-	
+
 	rows, err := config.ExecuteQuery(filter_hosp)
-	if err!=nil{
+	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Database connection could not be established",
+		response := ErrorResponse{
+			Error: "Database connection could not be established",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -312,20 +307,20 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var data NearestHospital
-		err := rows.Scan(&data.HospName, &data.HospLatitude, &data.HospLongitude, &data.EmpanelmentType)
-		if err!=nil{
+		err := rows.Scan(&data.HospName,&data.HospContact, &data.HospLatitude, &data.HospLongitude, &data.EmpanelmentType)
+		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		dataList = append(dataList, data)	
+		dataList = append(dataList, data)
 	}
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
-	if err!=nil{
+	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	response := JsonResponse{
 		Message: json.RawMessage(jsonData),
 	}
@@ -334,18 +329,18 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Error encoding JSON",
+		response := ErrorResponse{
+			Error: "Error encoding JSON",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
 	}
 }
 
-type Query struct{
-	Remarks 		string
-	SubmissionDate  string
-	CaseNo  		string
+type Query struct {
+	Remarks        string
+	SubmissionDate string
+	CaseNo         string
 }
 
 func Queries(w http.ResponseWriter, r *http.Request) {
@@ -355,8 +350,8 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Unauthorised request",
+		response := ErrorResponse{
+			Error: "Unauthorised request",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -374,12 +369,12 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 			where wa.current_group_id in ('GP603', 'GPSHA', 'GPMD', 'GPBANK') 
 			and reim.card_no in %s and reim.ben_pending='Y' 
 			order by wa.crt_dt `, pmjay)
-	
+
 	rows, sql_error := config.ExecuteQuery(query)
-	if sql_error!=nil{
+	if sql_error != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Database connection could not be established",
+		response := ErrorResponse{
+			Error: "Database connection could not be established",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -389,20 +384,18 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var data Query
 		err := rows.Scan(&data.Remarks, &data.SubmissionDate, &data.CaseNo)
-		if err!=nil{
+		if err != nil {
 			fmt.Println(err)
 		}
-		dataList = append(dataList, data)	
+		dataList = append(dataList, data)
 	}
-
-
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
-	if err!=nil{
+	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	response := JsonResponse{
 		Message: json.RawMessage(jsonData),
 	}
@@ -411,21 +404,21 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Error encoding JSON",
+		response := ErrorResponse{
+			Error: "Error encoding JSON",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
 	}
 }
 
-
-type TrackCase struct{
-	CaseNo string
+type TrackCase struct {
+	CaseNo              string
 	ClaimSubmissionDate string
-	Status string
-	WorkflowDate string
+	Status              string
+	WorkflowDate        string
 }
+
 func TrackCases(w http.ResponseWriter, r *http.Request) {
 	// Set the Content-Type header to application/json
 	w.Header().Set("Content-Type", "application/json")
@@ -435,8 +428,8 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Unauthorised request",
+		response := ErrorResponse{
+			Error: "Unauthorised request",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -472,17 +465,17 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 			row_num = 1
 	) workflow
 	ON 
-		wa.current_workflow_id = workflow.workflow_id
+		wa.next_workflow_id = workflow.workflow_id
 	WHERE 
 		reimb.case_no = '%s' and 
 		reimb.card_no in %s
 	ORDER BY 
     wa.crt_dt DESC;`, case_no, pmjay)
 	rows, sql_error := config.ExecuteQuery(track_query)
-	if sql_error!=nil{
+	if sql_error != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Database connection could not be established",
+		response := ErrorResponse{
+			Error: "Database connection could not be established",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -491,18 +484,18 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var data TrackCase
 		err := rows.Scan(&data.CaseNo, &data.ClaimSubmissionDate, &data.Status, &data.WorkflowDate)
-		if err!=nil{
+		if err != nil {
 			fmt.Println(err)
 		}
-		dataList = append(dataList, data)	
+		dataList = append(dataList, data)
 	}
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
-	if err!=nil{
+	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	response := JsonResponse{
 		Message: json.RawMessage(jsonData),
 	}
@@ -511,22 +504,22 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Error encoding JSON",
+		response := ErrorResponse{
+			Error: "Error encoding JSON",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
 	}
 }
 
-type UserClaim struct{
-	Name 			string
-	CaseNo    		string
-	ClaimSubDate	string
-	Status 			string
-	SubAmt 			string
-	AppAmt 			string
-	PaidAmt 		string
+type UserClaim struct {
+	Name         string
+	CaseNo       string
+	ClaimSubDate string
+	Status       string
+	SubAmt       string
+	AppAmt       string
+	PaidAmt      string
 }
 
 func UserClaims(w http.ResponseWriter, r *http.Request) {
@@ -536,8 +529,8 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Unauthorised request",
+		response := ErrorResponse{
+			Error: "Unauthorised request",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -577,10 +570,10 @@ WHERE
     usr.id_number = '%s';`, id)
 
 	rows, sql_error := config.ExecuteQuery(claims_query)
-	if sql_error!=nil{
+	if sql_error != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Database connection could not be established",
+		response := ErrorResponse{
+			Error: "Database connection could not be established",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -590,18 +583,18 @@ WHERE
 	for rows.Next() {
 		var data UserClaim
 		err := rows.Scan(&data.Name, &data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt)
-		if err!=nil{
+		if err != nil {
 			fmt.Println(err)
 		}
-		dataList = append(dataList, data)	
+		dataList = append(dataList, data)
 	}
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
-	if err!=nil{
+	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	response := JsonResponse{
 		Message: json.RawMessage(jsonData),
 	}
@@ -610,8 +603,8 @@ WHERE
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Error encoding JSON",
+		response := ErrorResponse{
+			Error: "Error encoding JSON",
 		}
 		json.NewEncoder(w).Encode(response)
 		return

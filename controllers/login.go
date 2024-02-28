@@ -125,8 +125,9 @@ func getClaimsFromRequest(r *http.Request) (*TokenClaim, error) {
 }
 
 type RequestBody struct {
-	ForceID string `json:"force_id"`
-	OTP     string `json:"otp"`
+	ForceID 	string `json:"force_id"`
+	OTP     	string `json:"otp"`
+	ForceType   string `json:"force_type"`
 }
 
 type PmjayQuery struct{
@@ -175,8 +176,9 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	// Access the values from the struct
 	id := requestData.ForceID
 	otp := requestData.OTP
-
-	get_otp := fmt.Sprintf("select otp, updated_at from login where force_id='%s'", id)
+	force_type := requestData.ForceType
+	login_id := force_type + "-" + id
+	get_otp := fmt.Sprintf("select otp, updated_at from login where force_id='%s'", login_id)
 
 	rows, err := config.ExecuteQueryLocal(get_otp)
 	if err != nil {
@@ -303,10 +305,12 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 
 	// Access the values from the struct
 	id := requestData.ForceID
+	force_type := requestData.ForceType
+	login_id := force_type + "-" + force_type
 
 	login_q := fmt.Sprintf(`select mobile_number  
 	from capf.capf_prod_noimage_refresh 
-	where id_number='%s' and relation_name='Self'`, id)
+	where id_number='%s' and relation_name='Self'`, login_id)
 
 	rows, sql_error := config.ExecuteQuery(login_q)
 	if sql_error!=nil{
@@ -338,8 +342,8 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	phone_og := dataList[0].MobileNumber
-	// phone_og := "7014600922"
+	// phone_og := dataList[0].MobileNumber
+	phone_og := "7014600922"
 	otp := generateOTP()
 	//otp := "123456"
 	save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
