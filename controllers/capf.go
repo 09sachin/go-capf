@@ -35,11 +35,12 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	//id := "913228862"
 
 	id := claims.Username
+	force_type := claims.ForceType
 
 	dashboardQuery := fmt.Sprintf(`SELECT member_name_eng, year_of_birth, dob, gender,
 	 insertion_date, mobile_number, id_number 
 	 FROM capf.capf_prod_noimage_refresh 
-	 WHERE id_number='%s' and relation_name='Self';`, id)
+	 WHERE id_number='%s' and id_type='%s' and relation_name='Self';`, id, force_type)
 
 	rows, sql_error := config.ExecuteQuery(dashboardQuery)
 	if sql_error != nil {
@@ -116,10 +117,11 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := claims.Username
+	force_type := claims.ForceType
 	user_details_query := fmt.Sprintf(`select member_name_eng, dob, gender, 
 	id_number, id_type, pmjay_id, unit_name, account_holder_name, bank_name, bank_account_number, ifsc_code,
 	mobile_number, father_name_eng, spouse_name_eng
-	from capf.capf_prod_noimage_refresh where id_number='%s' and relation_name='Self';`, id)
+	from capf.capf_prod_noimage_refresh where id_number='%s' and id_type='%s' and relation_name='Self';`, id, force_type)
 
 	rows, sql_error := config.ExecuteQuery(user_details_query)
 	if sql_error != nil {
@@ -537,6 +539,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := claims.Username
+	force_type := claims.ForceType
 	claims_query := fmt.Sprintf(`SELECT 
     usr.member_name_eng, 
     rem.case_no, 
@@ -567,7 +570,7 @@ JOIN (
 		row_num = 1
 ) rw ON rem.workflow_id = rw.workflow_id
 WHERE 
-    usr.id_number = '%s';`, id)
+    usr.id_number = '%s' and usr.id_type='%s';`, id, force_type)
 
 	rows, sql_error := config.ExecuteQuery(claims_query)
 	if sql_error != nil {

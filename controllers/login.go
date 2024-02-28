@@ -22,6 +22,7 @@ var jwtKey = []byte("your-secret-key")
 type TokenClaim struct {
 	Username string `json:"username"`
 	PmjayId string `json:"pmjayid"`
+	ForceType string `json:"force_type"`
 	jwt.StandardClaims
 }
 
@@ -72,12 +73,13 @@ type OTP struct {
 // 	}
 // }
 
-func createToken(username string, pmjay string) (string, error) {
+func createToken(username string, pmjay string, force_type string) (string, error) {
 	expirationTime := time.Now().Add(120 * time.Minute)
 
 	claims := &TokenClaim{
 		Username: username,
 		PmjayId: pmjay,
+		ForceType: force_type,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -178,9 +180,11 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	otp := requestData.OTP
 	force_type := requestData.ForceType
 	login_id := force_type + "-" + id
+	fmt.Println(login_id)
 	get_otp := fmt.Sprintf("select otp, updated_at from login where force_id='%s'", login_id)
 
 	rows, err := config.ExecuteQueryLocal(get_otp)
+	fmt.Println((err))
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		response  := ErrorResponse{
@@ -190,8 +194,8 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var dataList []OTP
-
 	for rows.Next() {
+		fmt.Println("yes")
 		var data OTP
 		err := rows.Scan(&data.Otp, &data.Created_at)
 		if err!=nil{
@@ -226,7 +230,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 
 	pmjay_q := fmt.Sprintf(`select distinct pmjay_id  
 	from capf.capf_prod_noimage_refresh 
-	where id_number='%s'`, id)
+	where id_number='%s' and id_type='%s'`, id, force_type)
 
 	rows, sql_error := config.ExecuteQuery(pmjay_q)
 	if sql_error!=nil{
@@ -249,7 +253,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 
 	str := "(" + formatStringSlice(pmjayids) + ")"
 	
-	token, _ := createToken(id, str)
+	token, _ := createToken(id, str, force_type)
 
 	response  := Response{
 		Message:  token,
@@ -306,11 +310,11 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	// Access the values from the struct
 	id := requestData.ForceID
 	force_type := requestData.ForceType
-	login_id := force_type + "-" + force_type
+	login_id := force_type + "-" + id
 
 	login_q := fmt.Sprintf(`select mobile_number  
 	from capf.capf_prod_noimage_refresh 
-	where id_number='%s' and relation_name='Self'`, login_id)
+	where id_number='%s' and id_type='%s' and relation_name='Self'`, id, force_type)
 
 	rows, sql_error := config.ExecuteQuery(login_q)
 	if sql_error!=nil{
@@ -349,7 +353,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
 	VALUES ('%s', '%s')
 	ON CONFLICT (force_id)
-	DO UPDATE SET otp = %s;`, id, otp, otp)
+	DO UPDATE SET otp = %s;`, login_id, otp, otp)
 	row:= config.InsertData(save_otp_query)
 	fmt.Println(row)
 	
