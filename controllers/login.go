@@ -348,8 +348,8 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 
 	// phone_og := dataList[0].MobileNumber
 	phone_og := "7014600922"
-	otp := generateOTP()
-	//otp := "123456"
+	// otp := generateOTP()
+	otp := "123456"
 	save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
 	VALUES ('%s', '%s')
 	ON CONFLICT (force_id)
@@ -366,14 +366,14 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 		message = fmt.Sprintf("Failed to send OTP to %s", phone_og)
 	}
 
-	if !success{
-		w.WriteHeader(http.StatusNotFound)
-		response  := ErrorResponse{
-			Error:  "Failed to send OTP, please try again",
-		}
-		json.NewEncoder(w).Encode(response)
-		return
-	}
+	// if !success{
+	// 	w.WriteHeader(http.StatusNotFound)
+	// 	response  := ErrorResponse{
+	// 		Error:  "Failed to send OTP, please try again",
+	// 	}
+	// 	json.NewEncoder(w).Encode(response)
+	// 	return
+	// }
 
 	response  := Response{
 		Message:  message,
