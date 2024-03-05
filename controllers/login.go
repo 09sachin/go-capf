@@ -74,7 +74,7 @@ type OTP struct {
 // }
 
 func createToken(username string, pmjay string, force_type string) (string, error) {
-	expirationTime := time.Now().Add(120 * time.Minute)
+	expirationTime := time.Now().Add(30 * time.Minute)
 
 	claims := &TokenClaim{
 		Username: username,
@@ -348,8 +348,8 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 
 	// phone_og := dataList[0].MobileNumber
 	phone_og := "7014600922"
-	// otp := generateOTP()
-	otp := "123456"
+	otp := generateOTP()
+	// otp := "123456"
 	save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
 	VALUES ('%s', '%s')
 	ON CONFLICT (force_id)

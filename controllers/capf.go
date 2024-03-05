@@ -25,7 +25,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusUnauthorized)
 		response := ErrorResponse{
 			Error: "Unauthorised request",
 		}
@@ -108,7 +108,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusUnauthorized)
 		response := ErrorResponse{
 			Error: "Unauthorised request",
 		}
@@ -179,7 +179,7 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 
 	_, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusUnauthorized)
 		response := ErrorResponse{
 			Error: "Unauthorised request",
 		}
@@ -270,7 +270,7 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 
 	_, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusUnauthorized)
 		response := ErrorResponse{
 			Error: "Unauthorised request",
 		}
@@ -360,7 +360,7 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusUnauthorized)
 		response := ErrorResponse{
 			Error: "Unauthorised request",
 		}
@@ -438,7 +438,7 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	case_no := query_params.Get("case_no")
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusUnauthorized)
 		response := ErrorResponse{
 			Error: "Unauthorised request",
 		}
@@ -531,6 +531,7 @@ type UserClaim struct {
 	SubAmt       string
 	AppAmt       string
 	PaidAmt      string
+	HospName	 string
 }
 
 func UserClaims(w http.ResponseWriter, r *http.Request) {
@@ -539,7 +540,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusUnauthorized)
 		response := ErrorResponse{
 			Error: "Unauthorised request",
 		}
@@ -549,16 +550,18 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 
 	id := claims.Username
 	force_type := claims.ForceType
-	claims_query := fmt.Sprintf(`SELECT 
+	claims_query := fmt.Sprintf(` distinct
     usr.member_name_eng, 
     rem.case_no, 
     rem.claim_sub_dt, 
     rw.process_desc,
     rem.claim_sub_amt, 
     rem.claim_app_amt, 
-    rem.claim_paid_amt
+    rem.claim_paid_amt,
+	ttp.hosp_name
 FROM 
     capf.case_dump_capf_reim_pfms rem
+    left join capf.tms_t_reimbursement ttp on rem.patient_no = ttp.patient_no
 JOIN 
     capf.capf_prod_noimage_refresh usr ON rem.card_no = usr.pmjay_id
 JOIN (
@@ -594,7 +597,7 @@ WHERE
 
 	for rows.Next() {
 		var data UserClaim
-		err := rows.Scan(&data.Name, &data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt)
+		err := rows.Scan(&data.Name, &data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt, &data.HospName)
 		if err != nil {
 			fmt.Println(err)
 		}
