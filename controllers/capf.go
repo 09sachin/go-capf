@@ -39,7 +39,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 	dashboardQuery := fmt.Sprintf(`SELECT member_name_eng, year_of_birth, dob, gender,
 	 insertion_date, mobile_number, id_number 
-	 FROM capf.capf_prod_noimage_refresh 
+	 FROM capf_prod_noimage_refresh 
 	 WHERE id_number='%s' and id_type='%s' and relation_name='Self';`, id, force_type)
 
 	rows, sql_error := config.ExecuteQuery(dashboardQuery)
@@ -121,7 +121,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	user_details_query := fmt.Sprintf(`select member_name_eng, dob, gender, 
 	id_number, id_type, pmjay_id, unit_name, account_holder_name, bank_name, bank_account_number, ifsc_code,
 	mobile_number, father_name_eng, spouse_name_eng
-	from capf.capf_prod_noimage_refresh where id_number='%s' and id_type='%s' and relation_name='Self';`, id, force_type)
+	from capf_prod_noimage_refresh where id_number='%s' and id_type='%s' and relation_name='Self';`, id, force_type)
 
 	rows, sql_error := config.ExecuteQuery(user_details_query)
 	if sql_error != nil {
@@ -167,7 +167,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 
 type Hospital struct {
 	HospName        string
-	HospContact		string
+	HospContact     string
 	HospLatitude    string
 	HospLongitude   string
 	EmpanelmentType string
@@ -200,15 +200,15 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	if empanelment == "PMJAY" {
 		empanelment_type = "('PMJAY and CAPF', 'PMJAY', 'PMJAY and CGHS')"
 	} else if empanelment == "CAPF" {
-		empanelment_type = "('PMJAY and CAPF', 'Only CAPF','PMJAY and CGHS')"
+		empanelment_type = "('PMJAY and CAPF', 'Only CAPF','PMJAY and CGHS', 'Only CGHS')"
 	} else {
 		empanelment_type = "('PMJAY and CAPF', 'PMJAY and CGHS')"
 	}
 
 	var hospital_query string
-	if distict!=""{
+	if distict != "" {
 		hospital_query = fmt.Sprintf("select empanelment_type, hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' and state='%s' and district='%s' LIMIT %d OFFSET %d", empanelment_type, state, distict, pageSize, offset)
-	}else{
+	} else {
 		hospital_query = fmt.Sprintf("select empanelment_type, hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' and state='%s' LIMIT %d OFFSET %d", empanelment_type, state, pageSize, offset)
 	}
 
@@ -318,7 +318,7 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var data NearestHospital
-		err := rows.Scan(&data.HospName,&data.HospContact, &data.HospLatitude, &data.HospLongitude, &data.EmpanelmentType)
+		err := rows.Scan(&data.HospName, &data.HospContact, &data.HospLatitude, &data.HospLongitude, &data.EmpanelmentType)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -374,8 +374,8 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 
 	query := fmt.Sprintf(`select  wa.remarks, 
 			 reim.claim_sub_dt, reim.case_no
-			from capf.tms_t_case_workflow_audit wa 
-			join capf.case_dump_capf_reim_pfms reim 
+			from tms_t_case_workflow_audit wa 
+			join case_dump_capf_reim_pfms reim 
 			on reim.patient_no=wa.transaction_id 
 			where wa.current_group_id in ('GP603', 'GPSHA', 'GPMD', 'GPBANK') 
 			and reim.card_no in %s and reim.ben_pending='Y' 
@@ -453,9 +453,9 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 		workflow.process_desc,
 		wa.crt_dt
 	FROM 
-		capf.tms_t_case_workflow_audit wa
+		tms_t_case_workflow_audit wa
 	JOIN 
-		capf.case_dump_capf_reim_pfms reimb
+		case_dump_capf_reim_pfms reimb
 	ON 
 		wa.transaction_id = reimb.patient_no
 	JOIN (
@@ -464,7 +464,7 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 				*,
 				ROW_NUMBER() OVER (PARTITION BY workflow_id ORDER BY crt_dt) AS row_num
 			FROM 
-				master.tms_m_case_workflow_new
+				tms_m_case_workflow_new
 			WHERE 
 				state_code = '91'
 		)
@@ -531,7 +531,8 @@ type UserClaim struct {
 	SubAmt       string
 	AppAmt       string
 	PaidAmt      string
-	HospName	 string
+	HospName     string
+	WorkflowId   string
 }
 
 func UserClaims(w http.ResponseWriter, r *http.Request) {
@@ -558,19 +559,20 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
     rem.claim_sub_amt, 
     rem.claim_app_amt, 
     rem.claim_paid_amt,
+	rem.workflow_id,
 	ttp.hosp_name
 FROM 
-    capf.case_dump_capf_reim_pfms rem
-    left join capf.tms_t_reimbursement ttp on rem.patient_no = ttp.patient_no
+    case_dump_capf_reim_pfms rem
+    left join tms_t_reimbursement ttp on rem.patient_no = ttp.patient_no
 JOIN 
-    capf.capf_prod_noimage_refresh usr ON rem.card_no = usr.pmjay_id
+    capf_prod_noimage_refresh usr ON rem.card_no = usr.pmjay_id
 JOIN (
 	WITH RankedWorkflows AS (
 		SELECT 
 			*,
 			ROW_NUMBER() OVER (PARTITION BY workflow_id ORDER BY crt_dt) AS row_num
 		FROM 
-			master.tms_m_case_workflow_new
+			tms_m_case_workflow_new
 		WHERE 
 			state_code = '91'
 	)
@@ -597,7 +599,7 @@ WHERE
 
 	for rows.Next() {
 		var data UserClaim
-		err := rows.Scan(&data.Name, &data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt, &data.HospName)
+		err := rows.Scan(&data.Name, &data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt,&data.WorkflowId, &data.HospName)
 		if err != nil {
 			fmt.Println(err)
 		}
