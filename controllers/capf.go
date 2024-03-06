@@ -550,7 +550,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 
 	id := claims.Username
 	force_type := claims.ForceType
-	claims_query := fmt.Sprintf(` distinct
+	claims_query := fmt.Sprintf(`select distinct
     usr.member_name_eng, 
     rem.case_no, 
     rem.claim_sub_dt, 
