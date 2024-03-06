@@ -1,22 +1,52 @@
 package controllers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/09sachin/go-capf/config"
 	"strconv"
+
+	"github.com/09sachin/go-capf/config"
+
 	// "github.com/09sachin/go-capf/models"
 	"net/http"
 )
 
+
+
+
+type CustomString struct {
+	sql.NullString
+}
+
+// MarshalJSON implements the json.Marshaler interface
+func (cs CustomString) MarshalJSON() ([]byte, error) {
+	if cs.Valid {
+		return json.Marshal(cs.String)
+	}
+	return json.Marshal("") // Convert null to empty string in JSON
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface
+func (cs *CustomString) UnmarshalJSON(data []byte) error {
+	var str string
+	if err := json.Unmarshal(data, &str); err != nil {
+		return err
+	}
+
+	cs.Valid = true
+	cs.String = str
+	return nil
+}
+
 type CapfProdNoImageRefresh struct {
-	MemberNameEng string
-	YearOfBirth   int // Assuming it's an integer; adjust based on your schema
-	DOB           string
-	Gender        string
-	InsertionDate string
-	MobileNumber  string
-	Id            string
+	MemberNameEng CustomString
+	YearOfBirth   CustomString // Assuming it's an integer; adjust based on your schema
+	DOB           CustomString
+	Gender        CustomString
+	InsertionDate CustomString
+	MobileNumber  CustomString
+	Id            CustomString
 }
 
 func DashboardData(w http.ResponseWriter, r *http.Request) {
@@ -86,20 +116,20 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 }
 
 type UserDetail struct {
-	MemberNameEng string
-	DOB           string
-	Gender        string
-	Id            string
-	IdType        string
-	PMJAY         string
-	Unit          string
-	AccountHolder string
-	Bank          string
-	AccountNumber string
-	Ifsc          string
-	MobileNumber  string
-	FatherName    string
-	SpouseName    string
+	MemberNameEng CustomString
+	DOB           CustomString
+	Gender        CustomString
+	Id            CustomString
+	IdType        CustomString
+	PMJAY         CustomString
+	Unit          CustomString
+	AccountHolder CustomString
+	Bank          CustomString
+	AccountNumber CustomString
+	Ifsc          CustomString
+	MobileNumber  CustomString
+	FatherName    CustomString
+	SpouseName    CustomString
 }
 
 func UserDetails(w http.ResponseWriter, r *http.Request) {
@@ -166,11 +196,11 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 }
 
 type Hospital struct {
-	HospName        string
-	HospContact     string
-	HospLatitude    string
-	HospLongitude   string
-	EmpanelmentType string
+	HospName        CustomString
+	HospContact     CustomString
+	HospLatitude    CustomString
+	HospLongitude   CustomString
+	EmpanelmentType CustomString
 }
 
 func Hospitals(w http.ResponseWriter, r *http.Request) {
@@ -257,11 +287,11 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 }
 
 type NearestHospital struct {
-	HospName        string
-	HospContact     string
-	HospLatitude    string
-	HospLongitude   string
-	EmpanelmentType string
+	HospName        CustomString
+	HospContact     CustomString
+	HospLatitude    CustomString
+	HospLongitude   CustomString
+	EmpanelmentType CustomString
 }
 
 func FilterHospital(w http.ResponseWriter, r *http.Request) {
@@ -349,9 +379,9 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 }
 
 type Query struct {
-	Remarks        string
-	SubmissionDate string
-	CaseNo         string
+	Remarks        CustomString
+	SubmissionDate CustomString
+	CaseNo         CustomString
 }
 
 func Queries(w http.ResponseWriter, r *http.Request) {
@@ -424,10 +454,10 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 }
 
 type TrackCase struct {
-	CaseNo              string
-	ClaimSubmissionDate string
-	Status              string
-	WorkflowDate        string
+	CaseNo              CustomString
+	ClaimSubmissionDate CustomString
+	Status              CustomString
+	WorkflowDate        CustomString
 }
 
 func TrackCases(w http.ResponseWriter, r *http.Request) {
@@ -524,15 +554,15 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 }
 
 type UserClaim struct {
-	Name         string
-	CaseNo       string
-	ClaimSubDate string
-	Status       string
-	SubAmt       string
-	AppAmt       string
-	PaidAmt      string
-	HospName     string
-	WorkflowId   string
+	Name         CustomString
+	CaseNo       CustomString
+	ClaimSubDate CustomString
+	Status       CustomString
+	SubAmt       CustomString
+	AppAmt       CustomString
+	PaidAmt      CustomString
+	HospName     CustomString
+	WorkflowId   CustomString
 }
 
 func UserClaims(w http.ResponseWriter, r *http.Request) {
