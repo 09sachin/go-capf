@@ -12,9 +12,6 @@ import (
 	"net/http"
 )
 
-
-
-
 type CustomString struct {
 	sql.NullString
 }
@@ -488,23 +485,7 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 		case_dump_capf_reim_pfms reimb
 	ON 
 		wa.transaction_id = reimb.patient_no
-	JOIN (
-		WITH RankedWorkflows AS (
-			SELECT 
-				*,
-				ROW_NUMBER() OVER (PARTITION BY workflow_id ORDER BY crt_dt) AS row_num
-			FROM 
-				tms_m_case_workflow_new
-			WHERE 
-				state_code = '91'
-		)
-		SELECT 
-			*
-		FROM 
-			RankedWorkflows
-		WHERE 
-			row_num = 1
-	) workflow
+	JOIN workflow_table workflow
 	ON 
 		wa.next_workflow_id = workflow.workflow_id
 	WHERE 
@@ -596,23 +577,7 @@ FROM
     left join tms_t_reimbursement ttp on rem.patient_no = ttp.patient_no
 JOIN 
     capf_prod_noimage_refresh usr ON rem.card_no = usr.pmjay_id
-JOIN (
-	WITH RankedWorkflows AS (
-		SELECT 
-			*,
-			ROW_NUMBER() OVER (PARTITION BY workflow_id ORDER BY crt_dt) AS row_num
-		FROM 
-			tms_m_case_workflow_new
-		WHERE 
-			state_code = '91'
-	)
-	SELECT 
-		*
-	FROM 
-		RankedWorkflows
-	WHERE 
-		row_num = 1
-) rw ON rem.workflow_id = rw.workflow_id
+JOIN workflow_table rw ON rem.workflow_id = rw.workflow_id
 WHERE 
     usr.id_number = '%s' and usr.id_type='%s';`, id, force_type)
 
@@ -629,7 +594,7 @@ WHERE
 
 	for rows.Next() {
 		var data UserClaim
-		err := rows.Scan(&data.Name, &data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt,&data.WorkflowId, &data.HospName)
+		err := rows.Scan(&data.Name, &data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt, &data.WorkflowId, &data.HospName)
 		if err != nil {
 			fmt.Println(err)
 		}
