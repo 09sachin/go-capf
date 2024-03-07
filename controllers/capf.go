@@ -402,7 +402,7 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	query := fmt.Sprintf(`select remarks, 
 			claim_sub_dt, case_no
 			from queries 
-			and card_no in %s
+			where card_no in %s
 			order by crt_dt `, pmjay)
 
 	rows, sql_error := config.ExecuteQuery(query)
