@@ -481,7 +481,7 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 		case_no = '%s' and 
 		card_no in %s
 	ORDER BY 
-    wa.crt_dt DESC;`, case_no, pmjay)
+    crt_dt DESC;`, case_no, pmjay)
 	rows, sql_error := config.ExecuteQuery(track_query)
 	if sql_error != nil {
 		w.WriteHeader(http.StatusNotFound)
