@@ -399,14 +399,11 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	pmjay := claims.PmjayId
 	fmt.Println(id)
 
-	query := fmt.Sprintf(`select  wa.remarks, 
-			 reim.claim_sub_dt, reim.case_no
-			from tms_t_case_workflow_audit wa 
-			join case_dump_capf_reim_pfms reim 
-			on reim.patient_no=wa.transaction_id 
-			where wa.current_group_id in ('GP603', 'GPSHA', 'GPMD', 'GPBANK') 
-			and reim.card_no in %s and reim.ben_pending='Y' 
-			order by wa.crt_dt `, pmjay)
+	query := fmt.Sprintf(`select remarks, 
+			claim_sub_dt, case_no
+			from queries 
+			and card_no in %s
+			order by crt_dt `, pmjay)
 
 	rows, sql_error := config.ExecuteQuery(query)
 	if sql_error != nil {
@@ -475,22 +472,14 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 
 	pmjay := claims.PmjayId
 	track_query := fmt.Sprintf(`SELECT 
-		reimb.case_no,
-		reimb.claim_sub_dt,
-		workflow.process_desc,
-		wa.crt_dt
-	FROM 
-		tms_t_case_workflow_audit wa
-	JOIN 
-		case_dump_capf_reim_pfms reimb
-	ON 
-		wa.transaction_id = reimb.patient_no
-	JOIN workflow_table workflow
-	ON 
-		wa.next_workflow_id = workflow.workflow_id
+		case_no,
+		claim_sub_dt,
+		process_desc,
+		crt_dt from 
+	track_case
 	WHERE 
-		reimb.case_no = '%s' and 
-		reimb.card_no in %s
+		case_no = '%s' and 
+		card_no in %s
 	ORDER BY 
     wa.crt_dt DESC;`, case_no, pmjay)
 	rows, sql_error := config.ExecuteQuery(track_query)
@@ -563,23 +552,19 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	id := claims.Username
 	force_type := claims.ForceType
 	claims_query := fmt.Sprintf(`select distinct
-    usr.member_name_eng, 
-    rem.case_no, 
-    rem.claim_sub_dt, 
-    rw.process_desc,
-    rem.claim_sub_amt, 
-    rem.claim_app_amt, 
-    rem.claim_paid_amt,
-	rem.workflow_id,
-	ttp.hosp_name
+    member_name_eng, 
+    case_no, 
+    claim_sub_dt, 
+    process_desc,
+    claim_sub_amt, 
+    claim_app_amt, 
+    claim_paid_amt,
+	workflow_id,
+	hosp_name
 FROM 
-    case_dump_capf_reim_pfms rem
-    left join tms_t_reimbursement ttp on rem.patient_no = ttp.patient_no
-JOIN 
-    capf_prod_noimage_refresh usr ON rem.card_no = usr.pmjay_id
-JOIN workflow_table rw ON rem.workflow_id = rw.workflow_id
+    claims
 WHERE 
-    usr.id_number = '%s' and usr.id_type='%s';`, id, force_type)
+    id_number = '%s' and id_type='%s';`, id, force_type)
 
 	rows, sql_error := config.ExecuteQuery(claims_query)
 	if sql_error != nil {
