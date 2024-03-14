@@ -3,3 +3,4 @@ logs/
 .env
 pkg/
 main
+go-capf

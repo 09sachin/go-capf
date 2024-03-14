@@ -38,7 +38,7 @@ func (cs *CustomString) UnmarshalJSON(data []byte) error {
 
 type CapfProdNoImageRefresh struct {
 	MemberNameEng CustomString
-	YearOfBirth   CustomString // Assuming it's an integer; adjust based on your schema
+	YearOfBirth   CustomString
 	DOB           CustomString
 	Gender        CustomString
 	InsertionDate CustomString

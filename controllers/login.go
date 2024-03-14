@@ -18,7 +18,6 @@ import (
 
 var jwtKey = []byte("your-secret-key")
 
-// Claims structure to represent the data that will be encoded to create the JWT
 type TokenClaim struct {
 	Username string `json:"username"`
 	PmjayId string `json:"pmjayid"`
@@ -53,25 +52,16 @@ type OTP struct {
 	Created_at time.Time   
 }
 
-// func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		tokenString := r.Header.Get("Authorization")
+type RequestBody struct {
+	ForceID 	string `json:"force_id"`
+	OTP     	string `json:"otp"`
+	ForceType   string `json:"force_type"`
+}
 
-// 		if tokenString == "" {
-// 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-// 			return
-// 		}
+type PmjayQuery struct{
+	PMJAY string
+}
 
-// 		_, err := validateToken(tokenString)
-// 		if err != nil {
-// 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-// 			return
-// 		}
-
-// 		// If the token is valid, proceed to the next handler
-// 		next.ServeHTTP(w, r)
-// 	}
-// }
 
 func createToken(username string, pmjay string, force_type string) (string, error) {
 	expirationTime := time.Now().Add(30 * time.Minute)
@@ -93,6 +83,7 @@ func createToken(username string, pmjay string, force_type string) (string, erro
 
 	return tokenString, nil
 }
+
 
 func validateToken(tokenString string) (*TokenClaim, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &TokenClaim{}, func(token *jwt.Token) (interface{}, error) {
@@ -124,16 +115,6 @@ func getClaimsFromRequest(r *http.Request) (*TokenClaim, error) {
 	}
 
 	return claims, nil
-}
-
-type RequestBody struct {
-	ForceID 	string `json:"force_id"`
-	OTP     	string `json:"otp"`
-	ForceType   string `json:"force_type"`
-}
-
-type PmjayQuery struct{
-	PMJAY string
 }
 
 
@@ -195,7 +176,6 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	var dataList []OTP
 	for rows.Next() {
-		fmt.Println("yes")
 		var data OTP
 		err := rows.Scan(&data.Otp, &data.Created_at)
 		if err!=nil{

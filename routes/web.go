@@ -1,13 +1,66 @@
 package routes
 
 import (
-	"github.com/gorilla/mux"
 	"github.com/09sachin/go-capf/controllers"
+	"github.com/gorilla/mux"
+	"net/http"
+	"sync"
+	"time"
 )
+
+
+type RateLimiter struct {
+    mu       sync.Mutex
+    requests map[string]map[time.Time]int // Map of IP addresses to request counts and timestamps
+}
+
+// NewRateLimiter creates a new RateLimiter.
+func NewRateLimiter() *RateLimiter {
+    return &RateLimiter{
+        requests: make(map[string]map[time.Time]int),
+    }
+}
+
+// RateLimitMiddleware creates a middleware for rate limiting requests based on IP address.
+func (rl *RateLimiter) RateLimitMiddleware(next http.Handler, limit int, duration time.Duration) mux.MiddlewareFunc {
+    return func(handler http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            ip := r.RemoteAddr // Assuming IP is in the RemoteAddr field
+
+            rl.mu.Lock()
+            defer rl.mu.Unlock()
+
+            // Initialize the map entry for this IP if it doesn't exist
+            if _, ok := rl.requests[ip]; !ok {
+                rl.requests[ip] = make(map[time.Time]int)
+            }
+
+            // Remove old entries from the map
+            for t := range rl.requests[ip] {
+                if time.Since(t) > duration {
+                    delete(rl.requests[ip], t)
+                }
+            }
+
+            // Check if the request count exceeds the limit
+            if len(rl.requests[ip]) >= limit {
+                http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
+                return
+            }
+
+            // Increment the request count for the current time
+            rl.requests[ip][time.Now()]++
+
+            // Call the next handler
+            handler.ServeHTTP(w, r)
+        })
+    }
+}
+
 
 func Init() *mux.Router {
 	route := mux.NewRouter()
-
+	rateLimiter := NewRateLimiter()
 	route.HandleFunc("/send-otp", controllers.SendOtp).Methods("POST")
 	route.HandleFunc("/otp-login", controllers.OtpLogin).Methods("POST")
 	route.HandleFunc("/dashboard-data", controllers.DashboardData).Methods("GET")
@@ -17,6 +70,7 @@ func Init() *mux.Router {
 	route.HandleFunc("/queries", controllers.Queries).Methods("GET")
 	route.HandleFunc("/track-case", controllers.TrackCases).Methods("GET")
 	route.HandleFunc("/claims", controllers.UserClaims).Methods("GET")
+	route.Use(rateLimiter.RateLimitMiddleware(route, 10, time.Second))  
 
 	return route
 }
