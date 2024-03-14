@@ -5,3 +5,4 @@ pkg/
 main
 go-capf
 backend.v.*
+*.out
