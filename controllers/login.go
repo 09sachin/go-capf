@@ -165,7 +165,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	get_otp := fmt.Sprintf("select otp, updated_at from login where force_id='%s'", login_id)
 
 	rows, err := config.ExecuteQueryLocal(get_otp)
-	fmt.Println((err))
+	fmt.Println(err)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		response  := ErrorResponse{
@@ -334,9 +334,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	VALUES ('%s', '%s')
 	ON CONFLICT (force_id)
 	DO UPDATE SET otp = %s;`, login_id, otp, otp)
-	row:= config.InsertData(save_otp_query)
-	fmt.Println(row)
-	
+	config.InsertData(save_otp_query)
 
 	success := sendSMSAPI(phone_og, otp)
 	var message string
@@ -374,7 +372,6 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 func sendSMSAPI(phoneNo, otp string) bool {
 	msg := "Dear%20User%2C%0AYour%20OTP%20to%20access%20CAPF%20application%20is%20ABCDEF.%20It%20will%20be%20valid%20for%203%20minutes.%0ANHA"
 	msg = strings.Replace(msg, "ABCDEF", otp, -1)
-	// fmt.Println(msg)
 	username := "abhaotp"
 	password := "f9F3r%5D%7BS"
 	entityID := "1001548700000010184"
