@@ -143,15 +143,15 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	
 	w.Header().Set("Content-Type", "application/json")
 
-	_, err := getClaimsFromRequest(r)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		response := ErrorResponse{
-			Error: "Unauthorised request",
-		}
-		json.NewEncoder(w).Encode(response)
-		return
-	}
+	// _, err := getClaimsFromRequest(r)
+	// if err != nil {
+	// 	w.WriteHeader(http.StatusUnauthorized)
+	// 	response := ErrorResponse{
+	// 		Error: "Unauthorised request",
+	// 	}
+	// 	json.NewEncoder(w).Encode(response)
+	// 	return
+	// }
 
 	query_params := r.URL.Query()
 	num := query_params.Get("page")
