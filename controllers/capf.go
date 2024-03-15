@@ -1,53 +1,16 @@
 package controllers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strconv"
-
 	"github.com/09sachin/go-capf/config"
-
-	// "github.com/09sachin/go-capf/models"
 	"net/http"
 )
 
-type CustomString struct {
-	sql.NullString
-}
-
-// MarshalJSON implements the json.Marshaler interface
-func (cs CustomString) MarshalJSON() ([]byte, error) {
-	if cs.Valid {
-		return json.Marshal(cs.String)
-	}
-	return json.Marshal("") // Convert null to empty string in JSON
-}
-
-// UnmarshalJSON implements the json.Unmarshaler interface
-func (cs *CustomString) UnmarshalJSON(data []byte) error {
-	var str string
-	if err := json.Unmarshal(data, &str); err != nil {
-		return err
-	}
-
-	cs.Valid = true
-	cs.String = str
-	return nil
-}
-
-type CapfProdNoImageRefresh struct {
-	MemberNameEng CustomString
-	YearOfBirth   CustomString
-	DOB           CustomString
-	Gender        CustomString
-	InsertionDate CustomString
-	MobileNumber  CustomString
-	Id            CustomString
-}
 
 func DashboardData(w http.ResponseWriter, r *http.Request) {
-	// Set the Content-Type header to application/json
+	
 	w.Header().Set("Content-Type", "application/json")
 
 	claims, err := getClaimsFromRequest(r)
@@ -59,8 +22,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-	//id := "913228862"
-
+	
 	id := claims.Username
 	force_type := claims.ForceType
 
@@ -71,6 +33,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 	rows, sql_error := config.ExecuteQuery(dashboardQuery)
 	if sql_error != nil {
+		ErrorLogger.Printf("Database connection error : dashboard")
 		w.WriteHeader(http.StatusNotFound)
 		response := ErrorResponse{
 			Error: "Database connection could not be established",
@@ -112,25 +75,9 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 }
 
-type UserDetail struct {
-	MemberNameEng CustomString
-	DOB           CustomString
-	Gender        CustomString
-	Id            CustomString
-	IdType        CustomString
-	PMJAY         CustomString
-	Unit          CustomString
-	AccountHolder CustomString
-	Bank          CustomString
-	AccountNumber CustomString
-	Ifsc          CustomString
-	MobileNumber  CustomString
-	FatherName    CustomString
-	SpouseName    CustomString
-}
 
 func UserDetails(w http.ResponseWriter, r *http.Request) {
-	// Set the Content-Type header to application/json
+	
 	w.Header().Set("Content-Type", "application/json")
 
 	claims, err := getClaimsFromRequest(r)
@@ -152,6 +99,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 
 	rows, sql_error := config.ExecuteQuery(user_details_query)
 	if sql_error != nil {
+		ErrorLogger.Printf("Database connection error : userdetails")
 		w.WriteHeader(http.StatusNotFound)
 		response := ErrorResponse{
 			Error: "Database connection could not be established",
@@ -192,16 +140,9 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type Hospital struct {
-	HospName        CustomString
-	HospContact     CustomString
-	HospLatitude    CustomString
-	HospLongitude   CustomString
-	EmpanelmentType CustomString
-}
 
 func Hospitals(w http.ResponseWriter, r *http.Request) {
-	// Set the Content-Type header to application/json
+	
 	w.Header().Set("Content-Type", "application/json")
 
 	_, err := getClaimsFromRequest(r)
@@ -241,6 +182,7 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 
 	rows, sql_error := config.ExecuteQuery(hospital_query)
 	if sql_error != nil {
+		ErrorLogger.Printf("Database connection error : hospitals")
 		w.WriteHeader(http.StatusNotFound)
 		response := ErrorResponse{
 			Error: "Database connection could not be established",
@@ -281,16 +223,9 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type NearestHospital struct {
-	HospName        CustomString
-	HospContact     CustomString
-	HospLatitude    CustomString
-	HospLongitude   CustomString
-	EmpanelmentType CustomString
-}
 
 func FilterHospital(w http.ResponseWriter, r *http.Request) {
-	// Set the Content-Type header to application/json
+	
 	w.Header().Set("Content-Type", "application/json")
 
 	_, err := getClaimsFromRequest(r)
@@ -331,6 +266,7 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := config.ExecuteQuery(filter_hosp)
 	if err != nil {
+		ErrorLogger.Printf("Database connection error : filter hospital")
 		w.WriteHeader(http.StatusNotFound)
 		response := ErrorResponse{
 			Error: "Database connection could not be established",
@@ -373,14 +309,9 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type Query struct {
-	Remarks        CustomString
-	SubmissionDate CustomString
-	CaseNo         CustomString
-}
 
 func Queries(w http.ResponseWriter, r *http.Request) {
-	// Set the Content-Type header to application/json
+	
 	w.Header().Set("Content-Type", "application/json")
 
 	claims, err := getClaimsFromRequest(r)
@@ -405,6 +336,7 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 
 	rows, sql_error := config.ExecuteQuery(query)
 	if sql_error != nil {
+		ErrorLogger.Printf("Database connection error : Queries")
 		w.WriteHeader(http.StatusNotFound)
 		response := ErrorResponse{
 			Error: "Database connection could not be established",
@@ -445,15 +377,9 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type TrackCase struct {
-	CaseNo              CustomString
-	ClaimSubmissionDate CustomString
-	Status              CustomString
-	WorkflowDate        CustomString
-}
 
 func TrackCases(w http.ResponseWriter, r *http.Request) {
-	// Set the Content-Type header to application/json
+	
 	w.Header().Set("Content-Type", "application/json")
 
 	query_params := r.URL.Query()
@@ -482,6 +408,7 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
     crt_dt DESC;`, case_no, pmjay)
 	rows, sql_error := config.ExecuteQuery(track_query)
 	if sql_error != nil {
+		ErrorLogger.Printf("Database connection error : trackcase")
 		w.WriteHeader(http.StatusNotFound)
 		response := ErrorResponse{
 			Error: "Database connection could not be established",
@@ -521,20 +448,10 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type UserClaim struct {
-	Name         CustomString
-	CaseNo       CustomString
-	ClaimSubDate CustomString
-	Status       CustomString
-	SubAmt       CustomString
-	AppAmt       CustomString
-	PaidAmt      CustomString
-	HospName     CustomString
-	WorkflowId   CustomString
-}
+
 
 func UserClaims(w http.ResponseWriter, r *http.Request) {
-	// Set the Content-Type header to application/json
+	
 	w.Header().Set("Content-Type", "application/json")
 
 	claims, err := getClaimsFromRequest(r)
@@ -566,6 +483,7 @@ WHERE
 
 	rows, sql_error := config.ExecuteQuery(claims_query)
 	if sql_error != nil {
+		ErrorLogger.Printf("Database connection error : userclaims")
 		w.WriteHeader(http.StatusNotFound)
 		response := ErrorResponse{
 			Error: "Database connection could not be established",

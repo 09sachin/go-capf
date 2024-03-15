@@ -14,16 +14,43 @@ type RateLimiter struct {
     requests map[string]map[time.Time]int // Map of IP addresses to request counts and timestamps
 }
 
-// NewRateLimiter creates a new RateLimiter.
+
 func NewRateLimiter() *RateLimiter {
     return &RateLimiter{
         requests: make(map[string]map[time.Time]int),
     }
 }
 
+// // Print the requests map
+// func (rl *RateLimiter) PrintRequestsMap() {
+// 	for ip, timestamps := range rl.requests {
+// 		log.Printf("IP: %s\n", ip)
+// 		for t, count := range timestamps {
+// 			log.Printf("Timestamp: %s, Count: %d\n", t.Local(), count)
+// 		}
+// 	}
+// }
+
+func (rl *RateLimiter) cleanupOldEntries() {
+    rl.mu.Lock()
+    defer rl.mu.Unlock()
+	// rl.PrintRequestsMap()
+    rl.requests = make(map[string]map[time.Time]int) // Clear the entire requests map
+}
+
+
 // RateLimitMiddleware creates a middleware for rate limiting requests based on IP address.
-func (rl *RateLimiter) RateLimitMiddleware(next http.Handler, limit int, duration time.Duration) mux.MiddlewareFunc {
-    return func(handler http.Handler) http.Handler {
+func (rl *RateLimiter) RateLimitMiddleware(next http.Handler, limit int, duration time.Duration, cleanupInterval time.Duration) mux.MiddlewareFunc {
+    go func() {
+        ticker := time.NewTicker(cleanupInterval)
+        defer ticker.Stop()
+        for {
+            <-ticker.C
+            rl.cleanupOldEntries()
+        }
+    }()
+
+	return func(handler http.Handler) http.Handler {
         return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
             ip := r.RemoteAddr // Assuming IP is in the RemoteAddr field
 
@@ -44,6 +71,7 @@ func (rl *RateLimiter) RateLimitMiddleware(next http.Handler, limit int, duratio
 
             // Check if the request count exceeds the limit
             if len(rl.requests[ip]) >= limit {
+                controllers.ErrorLogger.Println("Rate limit exceeded")
                 http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
                 return
             }
@@ -70,7 +98,7 @@ func Init() *mux.Router {
 	route.HandleFunc("/queries", controllers.Queries).Methods("GET")
 	route.HandleFunc("/track-case", controllers.TrackCases).Methods("GET")
 	route.HandleFunc("/claims", controllers.UserClaims).Methods("GET")
-	route.Use(rateLimiter.RateLimitMiddleware(route, 10, time.Second))  
+	route.Use(rateLimiter.RateLimitMiddleware(route, 10, time.Second,   10 * time.Second))  
 
 	return route
 }
