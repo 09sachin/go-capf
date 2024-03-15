@@ -62,7 +62,6 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 		Message: json.RawMessage(jsonData),
 	}
 
-	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -77,7 +76,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 
 func UserDetails(w http.ResponseWriter, r *http.Request) {
-	
+
 	w.Header().Set("Content-Type", "application/json")
 
 	claims, err := getClaimsFromRequest(r)
@@ -128,7 +127,6 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 		Message: json.RawMessage(jsonData),
 	}
 
-	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -211,7 +209,6 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 		Message: json.RawMessage(jsonData),
 	}
 
-	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -297,7 +294,6 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 		Message: json.RawMessage(jsonData),
 	}
 
-	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -365,7 +361,6 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 		Message: json.RawMessage(jsonData),
 	}
 
-	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -436,7 +431,6 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 		Message: json.RawMessage(jsonData),
 	}
 
-	// Encode the response as JSON and write it to the response writer
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -512,7 +506,7 @@ WHERE
 		Message: json.RawMessage(jsonData),
 	}
 
-	// Encode the response as JSON and write it to the response writer
+	
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
 		w.WriteHeader(http.StatusNotFound)
