@@ -22,13 +22,9 @@ func main() {
 
 	initLoggers()
 	loadEnv()
-	port, exist := "8000", true
+	port := ":8000"
 
-	if !exist {
-		fmt.Println("PORT not set in .env")
-	}
-
-	err := http.ListenAndServe(":"+port, routes.Init())
+	err := http.ListenAndServe(port, routes.Init())
 	if err != nil {
 		fmt.Println(err)
 	}

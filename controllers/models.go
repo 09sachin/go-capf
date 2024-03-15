@@ -5,14 +5,13 @@ import (
 	"time"
 	"encoding/json"
 	"github.com/dgrijalva/jwt-go"
-	"fmt"
 	"os"
 )
 
 func getEnv(key string) string {
     value, exists := os.LookupEnv(key)
     if !exists {
-        fmt.Printf("Warning: Environment variable %s is not set.\n", key)
+        ErrorLogger.Printf("Warning: Environment variable %s is not set.\n", key)
         return ""
     }
     return value
