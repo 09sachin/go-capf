@@ -7,3 +7,4 @@ go-capf
 backend.v.*
 *.out
 *.log
+deployments/
