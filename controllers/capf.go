@@ -28,7 +28,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 	dashboardQuery := fmt.Sprintf(`SELECT member_name_eng, year_of_birth, dob, gender,
 	 insertion_date, mobile_number, id_number 
-	 FROM capf_prod_noimage_refresh 
+	 FROM user_details 
 	 WHERE id_number='%s' and id_type='%s' and relation_name='Self';`, id, force_type)
 
 	rows, sql_error := config.ExecuteQuery(dashboardQuery)
@@ -94,7 +94,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	user_details_query := fmt.Sprintf(`select member_name_eng, dob, gender, 
 	id_number, id_type, pmjay_id, unit_name, account_holder_name, bank_name, bank_account_number, ifsc_code,
 	mobile_number, father_name_eng, spouse_name_eng
-	from capf_prod_noimage_refresh where id_number='%s' and id_type='%s' and relation_name='Self';`, id, force_type)
+	from user_details where id_number='%s' and id_type='%s' and relation_name='Self';`, id, force_type)
 
 	rows, sql_error := config.ExecuteQuery(user_details_query)
 	if sql_error != nil {

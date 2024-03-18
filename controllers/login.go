@@ -105,7 +105,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pmjay_q := fmt.Sprintf(`select distinct pmjay_id  
-	from capf_prod_noimage_refresh 
+	from user_details 
 	where id_number='%s' and id_type='%s'`, id, force_type)
 
 	rows, sql_error := config.ExecuteQuery(pmjay_q)
