@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	// ClientID     = getEnv("ClientID")
-	// ClientSecret = getEnv("ClientSecret")
+	ClientID     = getEnv("ClientID")
+	ClientSecret = getEnv("ClientSecret")
 	ScriptPath   = getEnv("ScriptPath")
 )
 
