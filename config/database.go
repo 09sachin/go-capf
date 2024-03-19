@@ -11,15 +11,15 @@ import (
 
 
 var (
-	host      = getEnv("DB_HOST")
+	// host      = getEnv("DB_HOST")
     localhost = getEnv("DB_HOST_LOCAL")
-    port      = getEnv("DB_PORT")
+    // port      = getEnv("DB_PORT")
     localport = getEnv("DB_PORT_LOCAL")
-    user      = getEnv("DB_USER")
+    // user      = getEnv("DB_USER")
     localuser = getEnv("DB_USER_LOCAL")
-    password  = getEnv("DB_PASS")
+    // password  = getEnv("DB_PASS")
     localpass = getEnv("DB_PASS_LOCAL")
-    dbname    = getEnv("DB_NAME")
+    // dbname    = getEnv("DB_NAME")
     localname = getEnv("DB_NAME_LOCAL")
 )
 
