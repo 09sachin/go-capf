@@ -2,7 +2,6 @@ package routes
 
 import (
 	"github.com/09sachin/go-capf/controllers"
-    "github.com/09sachin/go-capf/config"
 	"github.com/gorilla/mux"
 	"net/http"
 	"sync"
@@ -99,7 +98,6 @@ func Init() *mux.Router {
 	route.HandleFunc("/queries", controllers.Queries).Methods("GET")
 	route.HandleFunc("/track-case", controllers.TrackCases).Methods("GET")
 	route.HandleFunc("/claims", controllers.UserClaims).Methods("GET")
-    route.HandleFunc("/api/devops/nhvb3bhb4/deploy", config.Deployments).Methods("POST")
 	route.Use(rateLimiter.RateLimitMiddleware(route, 10, time.Second,   10 * time.Second))  
 
 	return route
