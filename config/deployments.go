@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	ClientID     = getEnv("ClientID")
-	ClientSecret = getEnv("ClientSecret")
+	// ClientID     = getEnv("ClientID")
+	// ClientSecret = getEnv("ClientSecret")
 	ScriptPath   = getEnv("ScriptPath")
 )
 
@@ -20,11 +20,11 @@ const (
 
 func Deployments(w http.ResponseWriter, r *http.Request) {
 	// Extract the client ID and client secret from headers
-	clientID := r.Header.Get("Client-ID")
-	clientSecret := r.Header.Get("Client-Secret")
+	client_ID := r.Header.Get("Client-ID")
+	client_Secret := r.Header.Get("Client-Secret")
 
 	// Check if the provided client ID and client secret match the expected values
-	if clientID != expectedClientID || clientSecret != expectedClientSecret {
+	if client_ID != expectedClientID || client_Secret != expectedClientSecret {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
