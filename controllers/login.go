@@ -1,8 +1,11 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/09sachin/go-capf/config"
+	_ "github.com/09sachin/go-capf/models"
 	"io"
 	"math/rand"
 	"net/http"
@@ -10,10 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"github.com/09sachin/go-capf/config"
-	_ "github.com/09sachin/go-capf/models"
 )
-
 
 func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	/// Set the Content-Type header to application/json
@@ -104,28 +104,40 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pmjay_q := fmt.Sprintf(`select distinct pmjay_id  
-	from user_details 
-	where id_number='%s' and id_type='%s'`, id, force_type)
+	urlStr := "https://apis.pmjay.gov.in/prodbis/capfService/searchFamilyDetails"
+	payload := map[string]string{
+		"id_type":   force_type,
+		"id_number": id,
+	}
 
-	rows, sql_error := config.ExecuteQuery(pmjay_q)
-	if sql_error != nil {
-		ErrorLogger.Printf("Database connection error : %s", login_id)
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Database connection could not be established",
-		}
-		json.NewEncoder(w).Encode(response)
+	jsonPayload, err := json.Marshal(payload)
+
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
 		return
 	}
+	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		ErrorLogger.Printf("Search API failed")
+		return
+	}
+
+	defer search_response.Body.Close()
+
+	var result map[string]interface{}
+	err = json.NewDecoder(search_response.Body).Decode(&result)
+	if err != nil {
+		fmt.Println("Error decoding response body:", err)
+		return
+	}
+
+	detailsArray := result["details"].([]interface{})
+
 	var pmjayids []string
-	for rows.Next() {
-		var pmjayid string
-		err := rows.Scan(&pmjayid)
-		if err != nil {
-			return
-		}
-		pmjayids = append(pmjayids, pmjayid)
+
+	for _, item := range detailsArray {
+		detail := item.(map[string]interface{})
+		pmjayids = append(pmjayids, detail["pmjay_id"].(string)) 
 	}
 
 	str := "(" + formatStringSlice(pmjayids) + ")"
@@ -188,41 +200,60 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	login_id := force_type + "-" + id
 	InfoLogger.Println(login_id)
 
-	login_q := fmt.Sprintf(`select mobile_number  
-	from capf_prod_noimage_refresh 
-	where id_number='%s' and id_type='%s' and relation_name='Self'`, id, force_type)
+	urlStr := "https://apis.pmjay.gov.in/prodbis/capfService/searchFamilyDetails"
+	// Create JSON payload
+	payload := map[string]string{
+		"id_type":   force_type,
+		"id_number": id,
+	}
 
-	rows, sql_error := config.ExecuteQuery(login_q)
-	if sql_error != nil {
-		ErrorLogger.Printf("Database connection error : %s", login_id)
+	// Marshal payload to JSON
+	jsonPayload, err := json.Marshal(payload)
+
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
+		return
+	}
+	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		ErrorLogger.Printf("Search API failed")
+		return
+	}
+
+	defer search_response.Body.Close()
+
+	var result map[string]interface{}
+	err = json.NewDecoder(search_response.Body).Decode(&result)
+	if err != nil {
+		fmt.Println("Error decoding response body:", err)
+		return
+	}
+
+	detailsArray := result["details"].([]interface{})
+
+	var self_data map[string]interface{}
+
+	for _, item := range detailsArray {
+		// Convert the item to a map[string]interface{}
+		detail := item.(map[string]interface{})
+
+		// Check if the "member_type" is "S"
+		if detail["member_type"] == "S" {
+			self_data = detail
+		}
+	}
+
+	if search_response.StatusCode != http.StatusOK {
 		w.WriteHeader(http.StatusNotFound)
 		response := ErrorResponse{
-			Error: "Database connection could not be established",
+			Error: "Wrong force id / request failed",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-	var dataList []PhoneNo
 
-	for rows.Next() {
-		var data PhoneNo
-		err := rows.Scan(&data.MobileNumber)
-		if err != nil {
-			fmt.Println(err)
-		}
-		dataList = append(dataList, data)
-	}
-
-	if len(dataList) == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Wrong force id",
-		}
-		json.NewEncoder(w).Encode(response)
-		return
-	}
-
-	// phone_og := dataList[0].MobileNumber
+	fmt.Println(self_data["mobile_number"])
+	// phone_og := self_data["mobile_number"]
 	phone_og := "7014600922"
 	otp := generateOTP()
 	// otp := "123456"
@@ -240,21 +271,21 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 		message = fmt.Sprintf("Failed to send OTP to %s", phone_og)
 	}
 
-	// if !success{
-	// 	w.WriteHeader(http.StatusNotFound)
-	// 	response  := ErrorResponse{
-	// 		Error:  "Failed to send OTP, please try again",
-	// 	}
-	// 	json.NewEncoder(w).Encode(response)
-	// 	return
-	// }
+	if !success{
+		w.WriteHeader(http.StatusNotFound)
+		response  := ErrorResponse{
+			Error:  "Failed to send OTP, please try again",
+		}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 
 	response := Response{
 		Message: message,
 	}
 
 	// Encode the response as JSON and write it to the response writer
-	err := json.NewEncoder(w).Encode(response)
+	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		response := ErrorResponse{

@@ -26,13 +26,13 @@ type CustomString struct {
 
 
 type CapfProdNoImageRefresh struct {
-	MemberNameEng CustomString
-	YearOfBirth   CustomString
-	DOB           CustomString
-	Gender        CustomString
-	InsertionDate CustomString
-	MobileNumber  CustomString
-	Id            CustomString
+	MemberNameEng string
+	YearOfBirth   string
+	DOB           string
+	Gender        string
+	InsertionDate string
+	MobileNumber  string
+	Id            string
 }
 
 type Hospital struct {
@@ -44,20 +44,20 @@ type Hospital struct {
 }
 
 type UserDetail struct {
-	MemberNameEng CustomString
-	DOB           CustomString
-	Gender        CustomString
-	Id            CustomString
-	IdType        CustomString
-	PMJAY         CustomString
-	Unit          CustomString
-	AccountHolder CustomString
-	Bank          CustomString
-	AccountNumber CustomString
-	Ifsc          CustomString
-	MobileNumber  CustomString
-	FatherName    CustomString
-	SpouseName    CustomString
+	MemberNameEng string
+	DOB           string
+	Gender        string
+	Id            string
+	IdType        string
+	PMJAY         string
+	Unit          string
+	AccountHolder string
+	Bank          string
+	AccountNumber string
+	Ifsc          string
+	MobileNumber  string
+	FatherName    string
+	SpouseName    string
 }
 
 type NearestHospital struct {
@@ -136,4 +136,12 @@ type RequestBody struct {
 
 type PmjayQuery struct{
 	PMJAY string
+}
+
+
+type ApiResponse struct {
+    Details []struct {
+        MemberType string `json:"member_type"`
+        // Add other fields as needed
+    } `json:"details"`
 }

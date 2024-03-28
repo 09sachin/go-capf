@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"bytes"
 	"strconv"
 	"github.com/09sachin/go-capf/config"
 	"net/http"
@@ -26,32 +27,60 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	id := claims.Username
 	force_type := claims.ForceType
 
-	dashboardQuery := fmt.Sprintf(`SELECT member_name_eng, year_of_birth, dob, gender,
-	 insertion_date, mobile_number, id_number 
-	 FROM user_details 
-	 WHERE id_number='%s' and id_type='%s' and relation_name='Self';`, id, force_type)
+	urlStr := "https://apis.pmjay.gov.in/prodbis/capfService/searchFamilyDetails"
+	// Create JSON payload
+	payload := map[string]string{
+		"id_type":   force_type,
+		"id_number": id,
+	}
 
-	rows, sql_error := config.ExecuteQuery(dashboardQuery)
-	if sql_error != nil {
-		ErrorLogger.Printf("Database connection error : dashboard")
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Database connection could not be established",
-		}
-		json.NewEncoder(w).Encode(response)
+	// Marshal payload to JSON
+	jsonPayload, err := json.Marshal(payload)
+
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
 		return
 	}
-	var dataList []CapfProdNoImageRefresh
-
-	for rows.Next() {
-		var data CapfProdNoImageRefresh
-		err := rows.Scan(&data.MemberNameEng, &data.YearOfBirth, &data.DOB, &data.Gender, &data.InsertionDate, &data.MobileNumber, &data.Id)
-		if err != nil {
-			fmt.Println(err)
-		}
-		dataList = append(dataList, data)
+	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		ErrorLogger.Printf("Search API failed")
+		return
 	}
 
+	defer search_response.Body.Close()
+
+	var result map[string]interface{}
+	err = json.NewDecoder(search_response.Body).Decode(&result)
+	if err != nil {
+		fmt.Println("Error decoding response body:", err)
+		return
+	}
+
+	detailsArray := result["details"].([]interface{})
+
+	var self_data map[string]interface{}
+	fmt.Println(self_data["id"])
+	var capfData CapfProdNoImageRefresh
+	for _, item := range detailsArray {
+		// Convert the item to a map[string]interface{}
+		detail := item.(map[string]interface{})
+
+		// Check if the "member_type" is "S"
+		if detail["member_type"] == "S" {
+			self_data = detail
+			capfData.MemberNameEng = detail["member_name_eng"].(string)
+			capfData.YearOfBirth = detail["year_of_birth"].(string)
+			capfData.DOB = detail["dob"].(string)
+			capfData.Gender = detail["gender"].(string)
+			capfData.InsertionDate = detail["pmjay_id"].(string)
+			capfData.MobileNumber = detail["mobile_number"].(string)
+			capfData.Id = detail["id_number"].(string)
+			break
+		}
+	}
+
+	var dataList []CapfProdNoImageRefresh
+	dataList = append(dataList, capfData)
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
 	if err != nil {
@@ -91,31 +120,69 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 
 	id := claims.Username
 	force_type := claims.ForceType
-	user_details_query := fmt.Sprintf(`select member_name_eng, dob, gender, 
-	id_number, id_type, pmjay_id, unit_name, account_holder_name, bank_name, bank_account_number, ifsc_code,
-	mobile_number, father_name_eng, spouse_name_eng
-	from user_details where id_number='%s' and id_type='%s' and relation_name='Self';`, id, force_type)
 
-	rows, sql_error := config.ExecuteQuery(user_details_query)
-	if sql_error != nil {
-		ErrorLogger.Printf("Database connection error : userdetails")
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Database connection could not be established",
-		}
-		json.NewEncoder(w).Encode(response)
+
+	urlStr := "https://apis.pmjay.gov.in/prodbis/capfService/searchFamilyDetails"
+	// Create JSON payload
+	payload := map[string]string{
+		"id_type":   force_type,
+		"id_number": id,
+	}
+
+	// Marshal payload to JSON
+	jsonPayload, err := json.Marshal(payload)
+
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
 		return
 	}
-	var dataList []UserDetail
-
-	for rows.Next() {
-		var data UserDetail
-		err := rows.Scan(&data.MemberNameEng, &data.DOB, &data.Gender, &data.Id, &data.IdType, &data.PMJAY, &data.Unit, &data.AccountHolder, &data.Bank, &data.AccountNumber, &data.Ifsc, &data.MobileNumber, &data.FatherName, &data.SpouseName)
-		if err != nil {
-			fmt.Println(err)
-		}
-		dataList = append(dataList, data)
+	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		ErrorLogger.Printf("Search API failed")
+		return
 	}
+
+	defer search_response.Body.Close()
+
+	var result map[string]interface{}
+	err = json.NewDecoder(search_response.Body).Decode(&result)
+	if err != nil {
+		fmt.Println("Error decoding response body:", err)
+		return
+	}
+
+	detailsArray := result["details"].([]interface{})
+
+	var self_data map[string]interface{}
+	fmt.Println(self_data["id"])
+	var capfData UserDetail
+	for _, item := range detailsArray {
+		// Convert the item to a map[string]interface{}
+		detail := item.(map[string]interface{})
+
+		// Check if the "member_type" is "S"
+		if detail["member_type"] == "S" {
+			self_data = detail
+			capfData.MemberNameEng = detail["member_name_eng"].(string)
+			capfData.DOB = detail["dob"].(string)
+			capfData.Gender = detail["gender"].(string)
+			capfData.MobileNumber = detail["mobile_number"].(string)
+			capfData.PMJAY = detail["pmjay_id"].(string)
+			capfData.Id = detail["id_number"].(string)
+			capfData.IdType = detail["id_type"].(string)
+			capfData.AccountHolder = detail["account_holder_name"].(string)
+			capfData.AccountNumber = detail["bank_account_number"].(string)
+			capfData.Ifsc =  detail["ifsc_code"].(string)
+			capfData.Bank =  detail["bank_name"].(string)
+			capfData.SpouseName =  detail["spouse_name_eng"].(string)
+			capfData.FatherName =  detail["father_name_eng"].(string)
+			capfData.Unit =  detail["unit_name"].(string)
+			break
+		}
+	}
+	var dataList []UserDetail
+	
+	dataList = append(dataList, capfData)
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
