@@ -75,6 +75,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 			capfData.InsertionDate = detail["pmjay_id"].(string)
 			capfData.MobileNumber = detail["mobile_number"].(string)
 			capfData.Id = detail["id_number"].(string)
+			capfData.Image = detail["image"].(string)
 			break
 		}
 	}

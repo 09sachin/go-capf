@@ -33,6 +33,7 @@ type CapfProdNoImageRefresh struct {
 	InsertionDate string
 	MobileNumber  string
 	Id            string
+	Image         string
 }
 
 type Hospital struct {
