@@ -27,7 +27,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	id := claims.Username
 	force_type := claims.ForceType
 
-	urlStr := "https://apis.pmjay.gov.in/prodbis/capfService/searchFamilyDetails"
+	urlStr := "https://apis-uat.pmjay.gov.in/pmjay/bis/capfService/v2.0/searchFamilyDetails"
 	// Create JSON payload
 	payload := map[string]string{
 		"id_type":   force_type,
@@ -123,7 +123,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	force_type := claims.ForceType
 
 
-	urlStr := "https://apis.pmjay.gov.in/prodbis/capfService/searchFamilyDetails"
+	urlStr := "https://apis-uat.pmjay.gov.in/pmjay/bis/capfService/v2.0/searchFamilyDetails"
 	// Create JSON payload
 	payload := map[string]string{
 		"id_type":   force_type,
