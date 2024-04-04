@@ -119,6 +119,12 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		ErrorLogger.Printf("Search API failed")
+		ErrorLogger.Println(err)
+		w.WriteHeader(http.StatusNotFound)
+		response := ErrorResponse{
+			Error: "Search request failed",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -224,6 +230,12 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		ErrorLogger.Printf("Search API failed")
+		ErrorLogger.Println(err)
+		w.WriteHeader(http.StatusNotFound)
+		response := ErrorResponse{
+			Error: "Search request failed",
+		}
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
