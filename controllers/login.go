@@ -130,7 +130,14 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error decoding response body:", err)
 		return
 	}
-
+	if result["details"]==nil{
+		w.WriteHeader(http.StatusNotFound)
+		response := ErrorResponse{
+			Error: "Wrong force id / request failed",
+		}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 	detailsArray := result["details"].([]interface{})
 
 	var pmjayids []string
@@ -228,7 +235,14 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error decoding response body:", err)
 		return
 	}
-
+	if result["details"]==nil{
+		w.WriteHeader(http.StatusNotFound)
+		response := ErrorResponse{
+			Error: "Wrong force id / request failed",
+		}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 	detailsArray := result["details"].([]interface{})
 
 	var self_data map[string]interface{}
