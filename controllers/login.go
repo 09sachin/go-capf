@@ -104,7 +104,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	urlStr := "https://apis-uat.pmjay.gov.in/pmjay/bis/capfService/v2.0/searchFamilyDetails"
+	urlStr := "https://apis-uat.pmjay.gov.in/pmjay/bis/capfService/searchFamilyDetails"
 	payload := map[string]string{
 		"id_type":   force_type,
 		"id_number": id,
@@ -213,7 +213,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	login_id := force_type + "-" + id
 	InfoLogger.Println(login_id)
 
-	urlStr := "https://apis-uat.pmjay.gov.in/pmjay/bis/capfService/v2.0/searchFamilyDetails"
+	urlStr := "https://apis-uat.pmjay.gov.in/pmjay/bis/capfService/searchFamilyDetails"
 	// Create JSON payload
 	payload := map[string]string{
 		"id_type":   force_type,
