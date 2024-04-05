@@ -104,7 +104,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	urlStr := "https://apis-uat.pmjay.gov.in/pmjay/bis/capfService/searchFamilyDetails"
+	urlStr := Beneficiary_URL
 	payload := map[string]string{
 		"id_type":   force_type,
 		"id_number": id,
@@ -213,7 +213,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	login_id := force_type + "-" + id
 	InfoLogger.Println(login_id)
 
-	urlStr := "https://apis-uat.pmjay.gov.in/pmjay/bis/capfService/searchFamilyDetails"
+	urlStr := Beneficiary_URL
 	// Create JSON payload
 	payload := map[string]string{
 		"id_type":   force_type,
@@ -325,8 +325,8 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 func sendSMSAPI(phoneNo, otp string) bool {
 	msg := "Dear%20User%2C%0AYour%20OTP%20to%20access%20CAPF%20application%20is%20ABCDEF.%20It%20will%20be%20valid%20for%203%20minutes.%0ANHA"
 	msg = strings.Replace(msg, "ABCDEF", otp, -1)
-	username := "abhaotp"
-	password := "f9F3r%5D%7BS"
+	username := SMS_Username
+	password := SMS_Password
 	entityID := "1001548700000010184"
 	tempID := "1007170748130898041"
 	source := "NHASMS"
