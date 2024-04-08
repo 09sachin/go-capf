@@ -561,6 +561,31 @@ WHERE
 		if err != nil {
 			fmt.Println(err)
 		}
+		data.ClaimAmt = func() string {
+			switch {
+			case data.PaidAmt.String != "":
+				return data.PaidAmt.String
+			case data.AppAmt.String != "":
+				return data.AppAmt.String
+			default:
+				return data.SubAmt.String
+			}
+		}()
+
+		if (data.WorkflowId.String == "171" || data.WorkflowId.String == "172" || data.WorkflowId.String == "173") {
+			data.ClaimStatus = "Rejected";
+		  } else if (data.WorkflowId.String == "141" ||
+		  	data.WorkflowId.String == "142" ||
+		  	data.WorkflowId.String == "143") {
+			data.ClaimStatus = "Approved";
+		  } else if (data.PaidAmt.String!=""){
+			data.ClaimStatus =  "Paid";
+		  }else{
+			data.ClaimStatus = "Pending"
+		  }
+
+
+		
 		dataList = append(dataList, data)
 	}
 

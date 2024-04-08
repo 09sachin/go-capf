@@ -93,6 +93,8 @@ type UserClaim struct {
 	PaidAmt      CustomString
 	HospName     CustomString
 	WorkflowId   CustomString
+	ClaimAmt     string
+	ClaimStatus  string
 }
 
 type TokenClaim struct {
