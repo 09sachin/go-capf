@@ -281,8 +281,9 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(self_data["mobile_number"])
 	// phone_og := self_data["mobile_number"]
 	phone_og := "7014600922"
-	otp := generateOTP()
-	// otp := "123456"
+	//Send otp implementation
+	// otp := generateOTP()
+	otp := "123456"
 	save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
 	VALUES ('%s', '%s')
 	ON CONFLICT (force_id)
