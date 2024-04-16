@@ -3,6 +3,8 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"net/http"
 )
 
 func (cs CustomString) MarshalJSON() ([]byte, error) {
@@ -34,4 +36,66 @@ func formatStringSlice(slice []string) string {
 		}
 	}
 	return result
+}
+
+func ParseFloat(s string) (float64, error) {
+	return strconv.ParseFloat(s, 64)
+}
+
+
+func ParseInt (s string) (int, error) {
+	return strconv.Atoi(s)
+}
+
+func isAlphaNumeric(s string) bool {
+	for _, char := range s {
+		if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >='0' && char <='9')) {
+			return false
+		}
+	}
+	return true
+}
+
+func QueryParamsError(w http.ResponseWriter){
+	w.WriteHeader(http.StatusUnprocessableEntity)
+	response := ErrorResponse{
+		Error: "Unexpected value in query params",
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+
+func UnauthorisedError(w http.ResponseWriter){
+	w.WriteHeader(http.StatusUnauthorized)
+	response := ErrorResponse{
+		Error: "Unauthorised request",
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+
+func JsonParseError(w http.ResponseWriter){
+	w.WriteHeader(http.StatusNotFound)
+	response := ErrorResponse{
+		Error: "Json Parse error",
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+
+func JsonEncodeError(w http.ResponseWriter){
+	w.WriteHeader(http.StatusNotFound)
+	response := ErrorResponse{
+		Error: "Encoder error",
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+
+func DbError(w http.ResponseWriter){
+	w.WriteHeader(http.StatusNotFound)
+	response := ErrorResponse{
+		Error: "DB error",
+	}
+	json.NewEncoder(w).Encode(response)
 }

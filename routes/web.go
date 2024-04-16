@@ -1,11 +1,14 @@
 package routes
 
 import (
-	"github.com/09sachin/go-capf/controllers"
-	"github.com/gorilla/mux"
 	"net/http"
 	"sync"
 	"time"
+    "io"
+    "bytes"
+    "encoding/json"
+	"github.com/09sachin/go-capf/controllers"
+	"github.com/gorilla/mux"
 )
 
 
@@ -34,10 +37,15 @@ func NewRateLimiter() *RateLimiter {
 func (rl *RateLimiter) cleanupOldEntries() {
     rl.mu.Lock()
     defer rl.mu.Unlock()
-	// rl.PrintRequestsMap()
-    rl.requests = make(map[string]map[time.Time]int) // Clear the entire requests map
+    if len(rl.requests) > 1000 {
+        rl.requests = make(map[string]map[time.Time]int) // Clear the entire requests map
+    }
 }
 
+
+type RequestBody struct {
+	ForceID string `json:"force_id"`
+}
 
 // RateLimitMiddleware creates a middleware for rate limiting requests based on IP address.
 func (rl *RateLimiter) RateLimitMiddleware(next http.Handler, limit int, duration time.Duration, cleanupInterval time.Duration) mux.MiddlewareFunc {
@@ -52,7 +60,7 @@ func (rl *RateLimiter) RateLimitMiddleware(next http.Handler, limit int, duratio
 
 	return func(handler http.Handler) http.Handler {
         return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-            ip := r.RemoteAddr // Assuming IP is in the RemoteAddr field
+            ip := r.RemoteAddr 
 
             rl.mu.Lock()
             defer rl.mu.Unlock()
@@ -85,38 +93,86 @@ func (rl *RateLimiter) RateLimitMiddleware(next http.Handler, limit int, duratio
     }
 }
 
-var (
-    sendOtpRateLimiter = NewRateLimiter()
-    otpLoginRateLimiter = NewRateLimiter()
-    dashboardDataRateLimiter = NewRateLimiter()
-    userDetailsRateLimiter = NewRateLimiter()
-    hospitalsRateLimiter = NewRateLimiter()
-    filterHospitalRateLimiter = NewRateLimiter()
-    queriesRateLimiter = NewRateLimiter()
-    trackCasesRateLimiter = NewRateLimiter()
-    userClaimsRateLimiter = NewRateLimiter()
-)
+
+// RateLimitMiddleware creates a middleware for rate limiting requests based on  force Id
+func (rl *RateLimiter) LoginRateLimitMiddleware(next http.Handler, limit int, duration time.Duration, cleanupInterval time.Duration) mux.MiddlewareFunc {
+    go func() {
+        ticker := time.NewTicker(cleanupInterval)
+        defer ticker.Stop()
+        for {
+            <-ticker.C
+            rl.cleanupOldEntries()
+        }
+    }()
+
+	return func(handler http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            body, err := io.ReadAll(r.Body)
+            if err != nil {
+                http.Error(w, "Error reading request body", http.StatusBadRequest)
+                return
+            }
+            r.Body = io.NopCloser(bytes.NewReader(body))
+
+            // Unmarshal the request body into the struct
+            var requestBody RequestBody
+            err = json.Unmarshal(body, &requestBody)
+            if err != nil {
+                http.Error(w, "Error unmarshalling request body", http.StatusBadRequest)
+                return
+            }
+
+            // Access the force_id field
+            forceID := requestBody.ForceID
+            ip := forceID 
+
+            rl.mu.Lock()
+            defer rl.mu.Unlock()
+
+            if _, ok := rl.requests[ip]; !ok {
+                rl.requests[ip] = make(map[time.Time]int)
+            }
+
+            for t := range rl.requests[ip] {
+                if time.Since(t) > duration {
+                    delete(rl.requests[ip], t)
+                }
+            }
+
+            // Check if the request count exceeds the limit
+            if len(rl.requests[ip]) >= limit {
+                controllers.ErrorLogger.Println("Rate limit exceeded")
+                http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
+                return
+            }
+
+            // Increment the request count for the current time
+            rl.requests[ip][time.Now()]++
+
+            // Call the next handler
+            handler.ServeHTTP(w, r)
+        })
+    }
+}
+
 
 func Init() *mux.Router {
 	route := mux.NewRouter()
-	route.HandleFunc("/send-otp", controllers.SendOtp).Methods("POST")
-	route.HandleFunc("/otp-login", controllers.OtpLogin).Methods("POST")
-	route.HandleFunc("/dashboard-data", controllers.DashboardData).Methods("GET")
-	route.HandleFunc("/user-details", controllers.UserDetails).Methods("GET")
-	route.HandleFunc("/hospital-list", controllers.Hospitals).Methods("GET")
-	route.HandleFunc("/filter-hospital", controllers.FilterHospital).Methods("GET")
-	route.HandleFunc("/queries", controllers.Queries).Methods("GET")
-	route.HandleFunc("/track-case", controllers.TrackCases).Methods("GET")
-	route.HandleFunc("/claims", controllers.UserClaims).Methods("GET")
-	
-    route.Use(sendOtpRateLimiter.RateLimitMiddleware(route, 2, time.Minute, 10*time.Minute))
-    route.Use(otpLoginRateLimiter.RateLimitMiddleware(route, 2, time.Minute, 10*time.Minute))
-    route.Use(dashboardDataRateLimiter.RateLimitMiddleware(route, 10, time.Second, 10*time.Minute))
-    route.Use(userDetailsRateLimiter.RateLimitMiddleware(route, 10, time.Second, 10*time.Minute))
-    route.Use(hospitalsRateLimiter.RateLimitMiddleware(route,  10, time.Second, 10*time.Minute))
-    route.Use(filterHospitalRateLimiter.RateLimitMiddleware(route,  10, time.Second, 10*time.Minute))
-    route.Use(queriesRateLimiter.RateLimitMiddleware(route, 10, time.Second, 10*time.Minute))
-    route.Use(trackCasesRateLimiter.RateLimitMiddleware(route, 10, time.Second, 10*time.Minute))
-    route.Use(userClaimsRateLimiter.RateLimitMiddleware(route, 10, time.Second, 10*time.Minute))
+	rateLimiter := NewRateLimiter()
+    loginLimiter := NewRateLimiter()
+    restrictedRoute := route.PathPrefix("/login").Subrouter()
+    dataRoute := route.PathPrefix("/data").Subrouter()
+    dataRoute.Use(loginLimiter.RateLimitMiddleware(route, 100, time.Minute,   10 * time.Minute))
+    restrictedRoute.Use(rateLimiter.LoginRateLimitMiddleware(route, 10, 5*time.Minute,   10 * time.Minute))
+	restrictedRoute.HandleFunc("/send-otp", controllers.SendOtp).Methods("POST")
+	restrictedRoute.HandleFunc("/otp-login", controllers.OtpLogin).Methods("POST")
+	dataRoute.HandleFunc("/dashboard-data", controllers.DashboardData).Methods("GET")
+	dataRoute.HandleFunc("/user-details", controllers.UserDetails).Methods("GET")
+	dataRoute.HandleFunc("/hospital-list", controllers.Hospitals).Methods("GET")
+	dataRoute.HandleFunc("/filter-hospital", controllers.FilterHospital).Methods("GET")
+	dataRoute.HandleFunc("/queries", controllers.Queries).Methods("GET")
+	dataRoute.HandleFunc("/track-case", controllers.TrackCases).Methods("GET")
+	dataRoute.HandleFunc("/claims", controllers.UserClaims).Methods("GET")
+
 	return route
 }

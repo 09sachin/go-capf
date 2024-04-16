@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"bytes"
-	"strconv"
 	"github.com/09sachin/go-capf/config"
 	"net/http"
 )
@@ -16,11 +15,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		response := ErrorResponse{
-			Error: "Unauthorised request",
-		}
-		json.NewEncoder(w).Encode(response)
+		UnauthorisedError(w)
 		return
 	}
 	
@@ -38,7 +33,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	jsonPayload, err := json.Marshal(payload)
 
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		JsonParseError(w)
 		return
 	}
 	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
@@ -52,7 +47,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	var result map[string]interface{}
 	err = json.NewDecoder(search_response.Body).Decode(&result)
 	if err != nil {
-		fmt.Println("Error decoding response body:", err)
+		JsonEncodeError(w)
 		return
 	}
 
@@ -94,11 +89,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error encoding JSON",
-		}
-		json.NewEncoder(w).Encode(response)
+		JsonEncodeError(w)
 		return
 	}
 
@@ -111,11 +102,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		response := ErrorResponse{
-			Error: "Unauthorised request",
-		}
-		json.NewEncoder(w).Encode(response)
+		UnauthorisedError(w)
 		return
 	}
 
@@ -134,7 +121,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	jsonPayload, err := json.Marshal(payload)
 
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		JsonParseError(w)
 		return
 	}
 	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
@@ -148,7 +135,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	var result map[string]interface{}
 	err = json.NewDecoder(search_response.Body).Decode(&result)
 	if err != nil {
-		fmt.Println("Error decoding response body:", err)
+		JsonEncodeError(w)
 		return
 	}
 
@@ -188,7 +175,8 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
 	if err != nil {
-		fmt.Println(err)
+		JsonParseError(w)
+		return
 	}
 
 	response := JsonResponse{
@@ -197,11 +185,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error encoding JSON",
-		}
-		json.NewEncoder(w).Encode(response)
+		JsonEncodeError(w)
 		return
 	}
 }
@@ -213,11 +197,7 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 
 	_, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		response := ErrorResponse{
-			Error: "Unauthorised request",
-		}
-		json.NewEncoder(w).Encode(response)
+		UnauthorisedError(w)
 		return
 	}
 
@@ -226,10 +206,26 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	size := query_params.Get("size")
 	state := query_params.Get("state")
 	distict := query_params.Get("district")
-	pageSize, _ := strconv.Atoi(size)
-	page, _ := strconv.Atoi(num)
-	offset := (page - 1) * pageSize
 	empanelment := query_params.Get("empanelment")
+	fmt.Println(empanelment)
+	nonAlphanumeric := (isAlphaNumeric(state) && isAlphaNumeric(distict) && isAlphaNumeric(empanelment))
+	fmt.Println(nonAlphanumeric)
+	if !nonAlphanumeric{
+		QueryParamsError(w)
+		return
+	}
+	pageSize, err := ParseInt(size)
+	if err != nil {
+		QueryParamsError(w)
+		return
+	}
+	page, err := ParseInt(num)
+	if err != nil {
+		QueryParamsError(w)
+		return
+	}
+	offset := (page - 1) * pageSize
+
 	var empanelment_type string
 	if empanelment == "PMJAY" {
 		empanelment_type = "('PMJAY and CAPF', 'PMJAY', 'PMJAY and CGHS')"
@@ -248,12 +244,7 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 
 	rows, sql_error := config.ExecuteQuery(hospital_query)
 	if sql_error != nil {
-		ErrorLogger.Printf("Database connection error : hospitals")
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Database connection could not be established",
-		}
-		json.NewEncoder(w).Encode(response)
+		DbError(w)
 		return
 	}
 	var dataList []Hospital
@@ -270,7 +261,8 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
 	if err != nil {
-		fmt.Println(err)
+		JsonParseError(w)
+		return
 	}
 
 	response := JsonResponse{
@@ -279,11 +271,7 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error encoding JSON",
-		}
-		json.NewEncoder(w).Encode(response)
+		JsonEncodeError(w)
 		return
 	}
 }
@@ -295,18 +283,33 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 
 	_, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		response := ErrorResponse{
-			Error: "Unauthorised request",
-		}
-		json.NewEncoder(w).Encode(response)
-		return
+		UnauthorisedError(w)
+		return 
 	}
 
 	query_params := r.URL.Query()
-	radius := query_params.Get("radius")
-	latitude := query_params.Get("latitude")
-	longitude := query_params.Get("longitude")
+	radiusStr := query_params.Get("radius")
+	latitudeStr := query_params.Get("latitude")
+	longitudeStr := query_params.Get("longitude")
+
+	radius, err := ParseFloat(radiusStr)
+	if err != nil {
+		QueryParamsError(w)
+		return
+	}
+
+	latitude, err := ParseFloat(latitudeStr)
+	if err != nil {
+		QueryParamsError(w)
+		return
+	}
+
+	longitude, err := ParseFloat(longitudeStr)
+	if err != nil {
+		QueryParamsError(w)
+		return
+	}
+
 	filter_hosp := fmt.Sprintf(` SELECT hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude, empanelment_type
 		FROM hem_t_hosp_info
 		WHERE 
@@ -320,10 +323,10 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 				ELSE NULL 
 			END IS NOT NULL
 			AND 6371 * 2 * ASIN(SQRT(
-				POWER(SIN(RADIANS(CAST(hosp_latitude AS DOUBLE PRECISION) - CAST(%s AS DOUBLE PRECISION)) / 2), 2) +
+				POWER(SIN(RADIANS(CAST(hosp_latitude AS DOUBLE PRECISION) - CAST(%f AS DOUBLE PRECISION)) / 2), 2) +
 				COS(RADIANS(CAST(18.72 AS DOUBLE PRECISION))) * COS(RADIANS(CAST(hosp_latitude AS DOUBLE PRECISION))) *
-				POWER(SIN(RADIANS(CAST(hosp_longitude AS DOUBLE PRECISION) - CAST(%s AS DOUBLE PRECISION)) / 2), 2)
-			)) <= %s
+				POWER(SIN(RADIANS(CAST(hosp_longitude AS DOUBLE PRECISION) - CAST(%f AS DOUBLE PRECISION)) / 2), 2)
+			)) <= %f
 			AND empanelment_type IN ('PMJAY and CAPF', 'PMJAY', 'Only CAPF', 'PMJAY and CGHS') 
 			AND active_yn = 'Y' 
 			AND hosp_status = 'Approved' 
@@ -331,12 +334,7 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := config.ExecuteQuery(filter_hosp)
 	if err != nil {
-		ErrorLogger.Printf("Database connection error : filter hospital")
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Database connection could not be established",
-		}
-		json.NewEncoder(w).Encode(response)
+		DbError(w)
 		return
 	}
 
@@ -355,7 +353,8 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
 	if err != nil {
-		fmt.Println(err)
+		JsonParseError(w)
+		return
 	}
 
 	response := JsonResponse{
@@ -364,11 +363,7 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error encoding JSON",
-		}
-		json.NewEncoder(w).Encode(response)
+		JsonEncodeError(w)
 		return
 	}
 }
@@ -380,11 +375,7 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		response := ErrorResponse{
-			Error: "Unauthorised request",
-		}
-		json.NewEncoder(w).Encode(response)
+		UnauthorisedError(w)
 		return
 	}
 
@@ -400,12 +391,7 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 
 	rows, sql_error := config.ExecuteQuery(query)
 	if sql_error != nil {
-		ErrorLogger.Printf("Database connection error : Queries")
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Database connection could not be established",
-		}
-		json.NewEncoder(w).Encode(response)
+		DbError(w)
 		return
 	}
 	var dataList []Query
@@ -422,7 +408,8 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
 	if err != nil {
-		fmt.Println(err)
+		JsonParseError(w)
+		return
 	}
 
 	response := JsonResponse{
@@ -431,11 +418,7 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error encoding JSON",
-		}
-		json.NewEncoder(w).Encode(response)
+		JsonEncodeError(w)
 		return
 	}
 }
@@ -449,11 +432,7 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	case_no := query_params.Get("case_no")
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		response := ErrorResponse{
-			Error: "Unauthorised request",
-		}
-		json.NewEncoder(w).Encode(response)
+		UnauthorisedError(w)
 		return
 	}
 
@@ -471,12 +450,7 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
     crt_dt DESC;`, case_no, pmjay)
 	rows, sql_error := config.ExecuteQuery(track_query)
 	if sql_error != nil {
-		ErrorLogger.Printf("Database connection error : trackcase")
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Database connection could not be established",
-		}
-		json.NewEncoder(w).Encode(response)
+		DbError(w)
 		return
 	}
 	var dataList []TrackCase
@@ -492,7 +466,8 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
 	if err != nil {
-		fmt.Println(err)
+		DbError(w)
+		return
 	}
 
 	response := JsonResponse{
@@ -501,11 +476,7 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error encoding JSON",
-		}
-		json.NewEncoder(w).Encode(response)
+		JsonEncodeError(w)
 		return
 	}
 }
@@ -518,11 +489,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		response := ErrorResponse{
-			Error: "Unauthorised request",
-		}
-		json.NewEncoder(w).Encode(response)
+		UnauthorisedError(w)
 		return
 	}
 
@@ -545,12 +512,7 @@ WHERE
 
 	rows, sql_error := config.ExecuteQuery(claims_query)
 	if sql_error != nil {
-		ErrorLogger.Printf("Database connection error : userclaims")
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Database connection could not be established",
-		}
-		json.NewEncoder(w).Encode(response)
+		DbError(w)
 		return
 	}
 	var dataList []UserClaim
@@ -592,7 +554,8 @@ WHERE
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
 	if err != nil {
-		fmt.Println(err)
+		JsonParseError(w)
+		return
 	}
 
 	response := JsonResponse{
@@ -602,11 +565,6 @@ WHERE
 	
 	errr := json.NewEncoder(w).Encode(response)
 	if errr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error encoding JSON",
-		}
-		json.NewEncoder(w).Encode(response)
-		return
+		JsonEncodeError(w)
 	}
 }

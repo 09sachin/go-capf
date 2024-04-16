@@ -21,11 +21,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error reading request body",
-		}
-		json.NewEncoder(w).Encode(response)
+		JsonParseError(w)
 		return
 	}
 
@@ -33,11 +29,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	var requestData RequestBody
 	err = json.Unmarshal(body, &requestData)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error decoding JSON",
-		}
-		json.NewEncoder(w).Encode(response)
+		JsonParseError(w)
 		return
 	}
 
@@ -52,12 +44,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	rows, err := config.ExecuteQueryLocal(get_otp)
 	fmt.Println(err)
 	if err != nil {
-		ErrorLogger.Printf("Database connection error : %s", login_id)
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Database connection could not be established",
-		}
-		json.NewEncoder(w).Encode(response)
+		DbError(w)
 		return
 	}
 	var dataList []OTP
@@ -113,7 +100,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	jsonPayload, err := json.Marshal(payload)
 
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		JsonEncodeError(w)
 		return
 	}
 	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
@@ -133,7 +120,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	var result map[string]interface{}
 	err = json.NewDecoder(search_response.Body).Decode(&result)
 	if err != nil {
-		fmt.Println("Error decoding response body:", err)
+		JsonParseError(w)
 		return
 	}
 	if result["details"]==nil{
@@ -164,12 +151,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	// Encode the response as JSON and write it to the response writer
 	err2 := json.NewEncoder(w).Encode(response)
 	if err2 != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error encoding JSON",
-		}
-		json.NewEncoder(w).Encode(response)
-		return
+		JsonEncodeError(w)
 	}
 }
 
@@ -187,11 +169,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	// Read the request body
 	body, err1 := io.ReadAll(r.Body)
 	if err1 != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error reading request body",
-		}
-		json.NewEncoder(w).Encode(response)
+		JsonParseError(w)
 		return
 	}
 
@@ -199,11 +177,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	var requestData RequestBody
 	err1 = json.Unmarshal(body, &requestData)
 	if err1 != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error decoding JSON",
-		}
-		json.NewEncoder(w).Encode(response)
+		JsonParseError(w)
 		return
 	}
 
@@ -224,7 +198,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	jsonPayload, err := json.Marshal(payload)
 
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		JsonParseError(w)
 		return
 	}
 	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
@@ -244,7 +218,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	var result map[string]interface{}
 	err = json.NewDecoder(search_response.Body).Decode(&result)
 	if err != nil {
-		fmt.Println("Error decoding response body:", err)
+		JsonParseError(w)
 		return
 	}
 	if result["details"]==nil{
@@ -314,11 +288,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	// Encode the response as JSON and write it to the response writer
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{
-			Error: "Error encoding JSON",
-		}
-		json.NewEncoder(w).Encode(response)
+		JsonEncodeError(w)
 		return
 	}
 }
