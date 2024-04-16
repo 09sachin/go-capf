@@ -244,10 +244,13 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 
 	success := sendSMSAPI(phone_og, otp)
 	var message string
+
+	masked_phone := maskPhoneNumber(phone_og)
+	
 	if success {
-		message = fmt.Sprintf("OTP sent successfully to %s", phone_og)
+		message = fmt.Sprintf("OTP sent successfully to %s", masked_phone)
 	} else {
-		message = fmt.Sprintf("Failed to send OTP to %s", phone_og)
+		message = fmt.Sprintf("Failed to send OTP to %s", masked_phone)
 	}
 
 	if !success{

@@ -108,3 +108,19 @@ func Custom4O4Error(w http.ResponseWriter, s string){
 	}
 	json.NewEncoder(w).Encode(response)
 }
+
+
+func maskPhoneNumber(phone string) string {
+    // Check if the phone number length is less than 10
+    if len(phone) < 10 {
+        return "Invalid phone number"
+    }
+
+    // Get the last four characters of the phone number
+    lastFour := phone[len(phone)-4:]
+
+    // Create a masked string with 'x' for the first six characters
+    masked := "XXXXXX" + lastFour
+
+    return masked
+}
