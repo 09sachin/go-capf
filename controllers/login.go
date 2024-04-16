@@ -37,6 +37,11 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	id := requestData.ForceID
 	otp := requestData.OTP
 	force_type := requestData.ForceType
+	isvalid := (isAlphaNumeric(id) && isAlphaNumeric(otp) && isAlphaNumeric(force_type))
+	if !isvalid{
+		QueryParamsError(w)
+		return
+	}
 	login_id := force_type + "-" + id
 	InfoLogger.Println(login_id)
 	get_otp := fmt.Sprintf("select otp, updated_at from login where force_id='%s'", login_id)
@@ -223,6 +228,11 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(self_data["mobile_number"])
 	// phone_og := self_data["mobile_number"]
 	phone_og := "7014600922"
+	isvalid := isAlphaNumeric(phone_og)
+	if !isvalid{
+		QueryParamsError(w)
+		return
+	}
 	//Send otp implementation
 	// otp := generateOTP()
 	otp := "123456"
