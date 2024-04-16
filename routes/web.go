@@ -85,10 +85,20 @@ func (rl *RateLimiter) RateLimitMiddleware(next http.Handler, limit int, duratio
     }
 }
 
+var (
+    sendOtpRateLimiter = NewRateLimiter()
+    otpLoginRateLimiter = NewRateLimiter()
+    dashboardDataRateLimiter = NewRateLimiter()
+    userDetailsRateLimiter = NewRateLimiter()
+    hospitalsRateLimiter = NewRateLimiter()
+    filterHospitalRateLimiter = NewRateLimiter()
+    queriesRateLimiter = NewRateLimiter()
+    trackCasesRateLimiter = NewRateLimiter()
+    userClaimsRateLimiter = NewRateLimiter()
+)
 
 func Init() *mux.Router {
 	route := mux.NewRouter()
-	rateLimiter := NewRateLimiter()
 	route.HandleFunc("/send-otp", controllers.SendOtp).Methods("POST")
 	route.HandleFunc("/otp-login", controllers.OtpLogin).Methods("POST")
 	route.HandleFunc("/dashboard-data", controllers.DashboardData).Methods("GET")
@@ -98,7 +108,15 @@ func Init() *mux.Router {
 	route.HandleFunc("/queries", controllers.Queries).Methods("GET")
 	route.HandleFunc("/track-case", controllers.TrackCases).Methods("GET")
 	route.HandleFunc("/claims", controllers.UserClaims).Methods("GET")
-	route.Use(rateLimiter.RateLimitMiddleware(route, 10, time.Second,   10 * time.Second))  
-
+	
+    route.Use(sendOtpRateLimiter.RateLimitMiddleware(route, 2, time.Minute, 10*time.Minute))
+    route.Use(otpLoginRateLimiter.RateLimitMiddleware(route, 2, time.Minute, 10*time.Minute))
+    route.Use(dashboardDataRateLimiter.RateLimitMiddleware(route, 10, time.Second, 10*time.Minute))
+    route.Use(userDetailsRateLimiter.RateLimitMiddleware(route, 10, time.Second, 10*time.Minute))
+    route.Use(hospitalsRateLimiter.RateLimitMiddleware(route,  10, time.Second, 10*time.Minute))
+    route.Use(filterHospitalRateLimiter.RateLimitMiddleware(route,  10, time.Second, 10*time.Minute))
+    route.Use(queriesRateLimiter.RateLimitMiddleware(route, 10, time.Second, 10*time.Minute))
+    route.Use(trackCasesRateLimiter.RateLimitMiddleware(route, 10, time.Second, 10*time.Minute))
+    route.Use(userClaimsRateLimiter.RateLimitMiddleware(route, 10, time.Second, 10*time.Minute))
 	return route
 }
