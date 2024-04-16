@@ -49,7 +49,7 @@ func ParseInt (s string) (int, error) {
 
 func isAlphaNumeric(s string) bool {
 	for _, char := range s {
-		if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >='0' && char <='9')) {
+		if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >='0' && char <='9') || char=='/' || char=='-') {
 			return false
 		}
 	}
@@ -96,6 +96,15 @@ func DbError(w http.ResponseWriter){
 	w.WriteHeader(http.StatusNotFound)
 	response := ErrorResponse{
 		Error: "DB error",
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+//Custom 404 error
+func Custom4O4Error(w http.ResponseWriter, s string){
+	w.WriteHeader(http.StatusNotFound)
+	response := ErrorResponse{
+		Error: s,
 	}
 	json.NewEncoder(w).Encode(response)
 }

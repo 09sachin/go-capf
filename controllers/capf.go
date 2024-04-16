@@ -39,6 +39,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		ErrorLogger.Printf("Search API failed")
+		Custom4O4Error(w,"Search API failed")
 		return
 	}
 
@@ -81,6 +82,8 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println(err)
+		JsonParseError(w)
+		return
 	}
 
 	response := JsonResponse{
@@ -127,6 +130,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	search_response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		ErrorLogger.Printf("Search API failed")
+		Custom4O4Error(w,"Search API failed")
 		return
 	}
 
@@ -207,26 +211,30 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 	state := query_params.Get("state")
 	distict := query_params.Get("district")
 	empanelment := query_params.Get("empanelment")
-	fmt.Println(empanelment)
+	
 	nonAlphanumeric := (isAlphaNumeric(state) && isAlphaNumeric(distict) && isAlphaNumeric(empanelment))
-	fmt.Println(nonAlphanumeric)
+	
 	if !nonAlphanumeric{
 		QueryParamsError(w)
 		return
 	}
+
 	pageSize, err := ParseInt(size)
 	if err != nil {
 		QueryParamsError(w)
 		return
 	}
+
 	page, err := ParseInt(num)
 	if err != nil {
 		QueryParamsError(w)
 		return
 	}
+
 	offset := (page - 1) * pageSize
 
 	var empanelment_type string
+
 	if empanelment == "PMJAY" {
 		empanelment_type = "('PMJAY and CAPF', 'PMJAY', 'PMJAY and CGHS')"
 	} else if empanelment == "CAPF" {
@@ -430,6 +438,14 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 
 	query_params := r.URL.Query()
 	case_no := query_params.Get("case_no")
+	
+	isvalid := isAlphaNumeric(case_no)
+
+	if !isvalid{
+		QueryParamsError(w)
+		return
+	}
+
 	claims, err := getClaimsFromRequest(r)
 	if err != nil {
 		UnauthorisedError(w)
