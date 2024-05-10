@@ -119,15 +119,18 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	detailsArray := result["details"].([]interface{})
 
 	var pmjayids []string
+	var names []string
 
 	for _, item := range detailsArray {
 		detail := item.(map[string]interface{})
 		pmjayids = append(pmjayids, detail["pmjay_id"].(string)) 
+		names = append(names, detail["member_name_eng"].(string))
 	}
 
 	str := "(" + formatStringSlice(pmjayids) + ")"
+	names_string := formatStringSlice(names)
 
-	token, _ := createToken(id, str, force_type)
+	token, _ := createToken(id, str, names_string, force_type)
 
 	response := Response{
 		Message: token,

@@ -8,12 +8,13 @@ import (
 )
 
 
-func createToken(username string, pmjay string, force_type string) (string, error) {
+func createToken(username string, pmjay string, names string, force_type string) (string, error) {
 	expirationTime := time.Now().Add(30 * time.Minute)
 
 	claims := &TokenClaim{
 		Username: username,
 		PmjayId: pmjay,
+		Names: names,
 		ForceType: force_type,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),

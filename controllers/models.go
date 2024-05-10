@@ -84,7 +84,7 @@ type TrackCase struct {
 }
 
 type UserClaim struct {
-	Name         CustomString
+	Name         string
 	CaseNo       CustomString
 	ClaimSubDate CustomString
 	Status       CustomString
@@ -100,6 +100,7 @@ type UserClaim struct {
 type TokenClaim struct {
 	Username string `json:"username"`
 	PmjayId string `json:"pmjayid"`
+	Names string `json:"names"`
 	ForceType string `json:"force_type"`
 	jwt.StandardClaims
 }

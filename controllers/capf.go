@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"github.com/09sachin/go-capf/config"
 	"net/http"
+	"strings"
 )
 
 
@@ -511,8 +512,12 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 
 	id := claims.Username
 	force_type := claims.ForceType
+	names := claims.Names
+	var names_list []string
+	elements := strings.Split(names, ", ")
+	names_list = append(names_list, elements...)
+
 	claims_query := fmt.Sprintf(`select distinct
-    member_name_eng, 
     case_no, 
     claim_sub_dt, 
     process_desc,
@@ -533,12 +538,16 @@ WHERE
 	}
 	var dataList []UserClaim
 
+	var count=0
 	for rows.Next() {
 		var data UserClaim
-		err := rows.Scan(&data.Name, &data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt, &data.WorkflowId, &data.HospName)
+		mem_name := names_list[count]
+		count += 1
+		err := rows.Scan(&data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt, &data.WorkflowId, &data.HospName)
 		if err != nil {
 			fmt.Println(err)
 		}
+		data.Name = mem_name
 		data.ClaimAmt = func() string {
 			switch {
 			case data.PaidAmt.String != "":
