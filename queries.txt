@@ -1,3 +1,5 @@
+Material views queries
+
 CREATE MATERIALIZED VIEW workflow_table AS
 WITH rankedworkflows AS (                                                                                                         
           SELECT tms_m_case_workflow_new.workflow_id,                                                                               
