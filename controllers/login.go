@@ -290,7 +290,8 @@ func sendSMSAPI(phoneNo, otp string) bool {
 
 	response, err := http.Post(urlStr, "application/json", nil)
 	if err != nil {
-		ErrorLogger.Printf("SMS API failed")
+		ErrorLogger.Printf("SMS API failed with error : ")
+		ErrorLogger.Println(err)
 		return false
 	}
 	defer response.Body.Close()
