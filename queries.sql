@@ -1,4 +1,4 @@
-Material views queries
+--Material views queries
 
 CREATE MATERIALIZED VIEW workflow_table AS
 WITH rankedworkflows AS (                                                                                                         
