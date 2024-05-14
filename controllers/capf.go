@@ -510,8 +510,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := claims.Username
-	force_type := claims.ForceType
+	pmjay := claims.PmjayId
 	names := claims.Names
 	var names_list []string
 	elements := strings.Split(names, ", ")
@@ -526,10 +525,10 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
     claim_paid_amt,
 	workflow_id,
 	hosp_name
-FROM 
-    claims
-WHERE 
-    id_number = '%s' and id_type='%s';`, id, force_type)
+	FROM 
+		claims
+	WHERE 
+		card_no in %s;`, pmjay)
 
 	rows, sql_error := config.ExecuteQuery(claims_query)
 	if sql_error != nil {
