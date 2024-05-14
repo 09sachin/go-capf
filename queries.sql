@@ -39,10 +39,10 @@ CREATE MATERIALIZED VIEW claims AS
      rem.claim_paid_amt,                                                                       
      rem.workflow_id,                                                                          
      ttp.hosp_name,
-     ttp.card_no                                                                            
-    FROM (case_dump_capf_reim_pfms rem                                                       
+     rem.card_no                                                                            
+    FROM case_dump_capf_reim_pfms rem                                                       
       LEFT JOIN tms_t_reimbursement ttp ON rem.patient_no::text = ttp.patient_no::text
-      JOIN workflow_table rw ON rem.workflow_id = rw.workflow_id);
+      JOIN workflow_table rw ON rem.workflow_id = rw.workflow_id;
 
 
 

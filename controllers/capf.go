@@ -532,6 +532,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 
 	rows, sql_error := config.ExecuteQuery(claims_query)
 	if sql_error != nil {
+		ErrorLogger.Println(sql_error)
 		DbError(w)
 		return
 	}
