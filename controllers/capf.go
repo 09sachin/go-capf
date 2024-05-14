@@ -547,16 +547,14 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	}
 	var dataList []UserClaim
 
-	var count=0
 	for rows.Next() {
 		var data UserClaim
-		card_no := data.CardNo.String
-		mem_name := nameMap[card_no]
-		count += 1
-		err := rows.Scan(&data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt, &data.WorkflowId, &data.HospName)
+		err := rows.Scan(&data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt, &data.WorkflowId, &data.HospName, &data.CardNo)
 		if err != nil {
 			fmt.Println(err)
 		}
+		card_no := data.CardNo.String
+		mem_name := nameMap[card_no]
 		data.Name = mem_name
 		data.ClaimAmt = func() string {
 			switch {
