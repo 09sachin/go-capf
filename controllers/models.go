@@ -95,6 +95,7 @@ type UserClaim struct {
 	WorkflowId   CustomString
 	ClaimAmt     string
 	ClaimStatus  string
+	CardNo       CustomString
 }
 
 type TokenClaim struct {

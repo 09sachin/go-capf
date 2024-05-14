@@ -515,6 +515,14 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	var names_list []string
 	elements := strings.Split(names, ", ")
 	names_list = append(names_list, elements...)
+	var card_list []string
+	elements_card := strings.Split(pmjay, ", ")
+	card_list = append(card_list, elements_card...)
+	nameMap := make(map[string]string)
+
+    for i := 0; i < len(names_list); i++ {
+    	nameMap[card_list[i]] = names_list[i]
+    }
 
 	claims_query := fmt.Sprintf(`select distinct
     case_no, 
@@ -524,7 +532,8 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
     claim_app_amt, 
     claim_paid_amt,
 	workflow_id,
-	hosp_name
+	hosp_name,
+	card_no
 	FROM 
 		claims
 	WHERE 
@@ -541,7 +550,8 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	var count=0
 	for rows.Next() {
 		var data UserClaim
-		mem_name := names_list[count]
+		card_no := data.CardNo.String
+		mem_name := nameMap[card_no]
 		count += 1
 		err := rows.Scan(&data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt, &data.WorkflowId, &data.HospName)
 		if err != nil {
