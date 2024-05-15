@@ -516,12 +516,24 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	elements := strings.Split(names, ", ")
 	names_list = append(names_list, elements...)
 	var card_list []string
+	len_ids := len(pmjay)
+	if (len_ids< 2){
+		ErrorLogger.Println(pmjay)
+		JsonParseError(w)
+		return
+	}
+
+	pmjay = pmjay[1:len_ids-1]
 	elements_card := strings.Split(pmjay, ", ")
 	card_list = append(card_list, elements_card...)
 	nameMap := make(map[string]string)
 
     for i := 0; i < len(names_list); i++ {
-    	nameMap[card_list[i]] = names_list[i]
+		card_len := len(card_list[i])
+		names_len := len(names_list[i])
+		name_person := names_list[i][1:names_len-1]
+		card_no := card_list[i][1:card_len-1]
+    	nameMap[card_no] = name_person
     }
 
 	claims_query := fmt.Sprintf(`select distinct
