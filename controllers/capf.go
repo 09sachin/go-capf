@@ -523,8 +523,8 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pmjay = pmjay[1:len_ids-1]
-	elements_card := strings.Split(pmjay, ", ")
+	pmjay_card := pmjay[1:len_ids-1]
+	elements_card := strings.Split(pmjay_card, ", ")
 	card_list = append(card_list, elements_card...)
 	nameMap := make(map[string]string)
 
