@@ -23,6 +23,35 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	id := claims.Username
 	force_type := claims.ForceType
 
+	//Test conditon for playstore/appstore
+	if (id=="00000000" && force_type=="BS"){
+		var capfData CapfProdNoImageRefresh
+		var dataList []CapfProdNoImageRefresh
+		capfData.MemberNameEng = "member_name_eng"
+		capfData.YearOfBirth = "year_of_birth"
+		capfData.DOB = "01/01/1899"
+		capfData.Gender = "gender"
+		capfData.InsertionDate = "pmjay_id"
+		capfData.MobileNumber = "mobile_number"
+		capfData.Id = "id_number"
+		capfData.Image = "image"
+		dataList = append(dataList, capfData)
+		jsonData, err := json.MarshalIndent(dataList, "", "    ")
+	
+		if err != nil {
+			fmt.Println(err)
+			JsonParseError(w)
+			return
+		}
+	
+		response := JsonResponse{
+			Message: json.RawMessage(jsonData),
+		}
+	
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
 	urlStr := Beneficiary_URL
 	// Create JSON payload
 	payload := map[string]string{
@@ -53,7 +82,12 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	detailsArray := result["details"].([]interface{})
+	detailsArray, ok := result["details"].([]interface{})
+	if !ok {
+		// Handle the case where "details" key is missing
+		Custom4O4Error(w,"Details missing in CAPF data")
+		return
+	}
 
 	var self_data map[string]interface{}
 	fmt.Println(self_data["id"])
@@ -113,6 +147,41 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	id := claims.Username
 	force_type := claims.ForceType
 
+	//Test conditon for playstore/appstore
+	if (id=="00000000" && force_type=="BS"){
+		var capfData UserDetail
+		var dataList []UserDetail
+		capfData.MemberNameEng = "member_name_eng"
+		capfData.DOB = "dob"
+		capfData.Gender = "gender"
+		capfData.MobileNumber = "mobile_number"
+		capfData.PMJAY = "pmjay_id"
+		capfData.Id = "id_number"
+		capfData.IdType = "id_type"
+		capfData.AccountHolder = "account_holder_name"
+		capfData.AccountNumber = "bank_account_number"
+		capfData.Ifsc =  "ifsc_code"
+		capfData.Bank =  "bank_name"
+		capfData.SpouseName =  "spouse_name_eng"
+		capfData.FatherName =  "father_name_eng"
+		capfData.Unit =  "unit_name"
+		dataList = append(dataList, capfData)
+		jsonData, err := json.MarshalIndent(dataList, "", "    ")
+	
+		if err != nil {
+			fmt.Println(err)
+			JsonParseError(w)
+			return
+		}
+	
+		response := JsonResponse{
+			Message: json.RawMessage(jsonData),
+		}
+	
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
 
 	urlStr := Beneficiary_URL
 	// Create JSON payload
@@ -144,7 +213,12 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	detailsArray := result["details"].([]interface{})
+	detailsArray, ok := result["details"].([]interface{})
+	if !ok {
+		// Handle the case where "details" key is missing
+		Custom4O4Error(w,"Details missing in CAPF data")
+		return
+	}
 
 	var self_data map[string]interface{}
 	fmt.Println(self_data["id"])

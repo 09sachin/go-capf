@@ -84,6 +84,21 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//Test conditon for playstore/appstore
+	if (id=="00000000" && force_type=="BS"){
+		xtoken, _ := createToken(id, "('test')", "name_string", force_type)
+		responsex := Response{
+			Message: xtoken,
+		}
+	
+		errx := json.NewEncoder(w).Encode(responsex)
+		if errx != nil {
+			JsonEncodeError(w)
+		}
+		return
+	}
+	
+
 	urlStr := Beneficiary_URL
 	payload := map[string]string{
 		"id_type":   force_type,
@@ -174,6 +189,21 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	force_type := requestData.ForceType
 	login_id := force_type + "-" + id
 	InfoLogger.Println(login_id)
+
+	//Test conditon for playstore/appstore
+	if (login_id=="BS-00000000"){
+		save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
+		VALUES ('%s', '%s')
+		ON CONFLICT (force_id)
+		DO UPDATE SET otp = %s;`, login_id, "123456", "123456")
+		config.InsertData(save_otp_query)
+		message_x := "OTP sent successfully to XXXXXX0000"
+		response_x := Response{
+			Message: message_x,
+		}
+		_ = json.NewEncoder(w).Encode(response_x)
+		return
+	}
 
 	urlStr := Beneficiary_URL
 	// Create JSON payload
