@@ -642,12 +642,14 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, sql_error := config.ExecuteQuery(claims_query, args...)
-	InfoLogger.Println(rows)
-	InfoLogger.Println(args)
 	if sql_error != nil {
 		ErrorLogger.Println(sql_error)
 		DbError(w)
 		return
+	}
+
+	if rows == nil {
+		InfoLogger.Println("No rows returned.")
 	}
 	var dataList []UserClaim
 
