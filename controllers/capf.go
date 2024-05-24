@@ -618,7 +618,6 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	}
 
 	placeholderStr := strings.Join(placeholders, ", ")
-	InfoLogger.Println(placeholderStr)
 
 	claims_query := fmt.Sprintf(`select distinct
     case_no, 
@@ -639,7 +638,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	for i, v := range pmjay_card_list {
 		args[i] = v
 	}
-	InfoLogger.Println(args)
+
 	rows, sql_error := config.ExecuteQuery(claims_query, args...)
 	if sql_error != nil {
 		ErrorLogger.Println(sql_error)
@@ -649,6 +648,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	var dataList []UserClaim
 
 	for rows.Next() {
+		InfoLogger.Println("Row")
 		var data UserClaim
 		err := rows.Scan(&data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt, &data.WorkflowId, &data.HospName, &data.CardNo)
 		if err != nil {
