@@ -59,7 +59,7 @@ func isAlphaNumeric(s string) bool {
 func QueryParamsError(w http.ResponseWriter){
 	w.WriteHeader(http.StatusUnprocessableEntity)
 	response := ErrorResponse{
-		Error: "Unexpected value in query params",
+		Error: "Unexpected request",
 	}
 	json.NewEncoder(w).Encode(response)
 }

@@ -610,7 +610,17 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
     	nameMap[card_no] = name_person
     }
 
-	claims_query := `select distinct
+	pmjay_card_list := card_list
+	InfoLogger.Println(pmjay_card_list)
+	placeholders := make([]string, len(pmjay_card_list))
+	for i := range placeholders {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+	}
+
+	placeholderStr := strings.Join(placeholders, ", ")
+	InfoLogger.Println(placeholderStr)
+
+	claims_query := fmt.Sprintf(`select distinct
     case_no, 
     claim_sub_dt, 
     process_desc,
@@ -623,9 +633,13 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	FROM 
 		claims
 	WHERE 
-		card_no in $1;`
+		card_no in (%s);`, placeholderStr)
 
-	rows, sql_error := config.ExecuteQuery(claims_query, pmjay)
+	args := make([]interface{}, len(pmjay))
+	for i, v := range pmjay {
+		args[i] = v
+	}
+	rows, sql_error := config.ExecuteQuery(claims_query, args...)
 	if sql_error != nil {
 		ErrorLogger.Println(sql_error)
 		DbError(w)
