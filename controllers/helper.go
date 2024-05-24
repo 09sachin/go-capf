@@ -95,7 +95,7 @@ func JsonEncodeError(w http.ResponseWriter){
 func DbError(w http.ResponseWriter){
 	w.WriteHeader(http.StatusNotFound)
 	response := ErrorResponse{
-		Error: "DB error",
+		Error: "Internal server error",
 	}
 	json.NewEncoder(w).Encode(response)
 }
