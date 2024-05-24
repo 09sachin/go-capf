@@ -466,13 +466,13 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	pmjay := claims.PmjayId
 	fmt.Println(id)
 
-	query := fmt.Sprintf(`select remarks, 
+	query := `select remarks, 
 			claim_sub_dt, case_no
 			from queries 
-			where card_no in %s
-			order by crt_dt `, pmjay)
+			where card_no in $1
+			order by crt_dt `
 
-	rows, sql_error := config.ExecuteQuery(query)
+	rows, sql_error := config.ExecuteQuery(query, pmjay)
 	if sql_error != nil {
 		DbError(w)
 		return
@@ -528,18 +528,18 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pmjay := claims.PmjayId
-	track_query := fmt.Sprintf(`SELECT 
+	track_query := `SELECT 
 		case_no,
 		claim_sub_dt,
 		process_desc,
 		crt_dt from 
 	track_case
 	WHERE 
-		case_no = '%s' and 
-		card_no in %s
+		case_no = $1 and 
+		card_no in $2
 	ORDER BY 
-    crt_dt DESC;`, case_no, pmjay)
-	rows, sql_error := config.ExecuteQuery(track_query)
+    crt_dt DESC;`
+	rows, sql_error := config.ExecuteQuery(track_query,case_no, pmjay)
 	if sql_error != nil {
 		DbError(w)
 		return
@@ -610,7 +610,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
     	nameMap[card_no] = name_person
     }
 
-	claims_query := fmt.Sprintf(`select distinct
+	claims_query := `select distinct
     case_no, 
     claim_sub_dt, 
     process_desc,
@@ -623,9 +623,9 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	FROM 
 		claims
 	WHERE 
-		card_no in %s;`, pmjay)
+		card_no in $1;`
 
-	rows, sql_error := config.ExecuteQuery(claims_query)
+	rows, sql_error := config.ExecuteQuery(claims_query, pmjay)
 	if sql_error != nil {
 		ErrorLogger.Println(sql_error)
 		DbError(w)

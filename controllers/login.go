@@ -44,10 +44,10 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	login_id := force_type + "-" + id
 	InfoLogger.Println(login_id)
-	get_otp := fmt.Sprintf("select otp, updated_at from login where force_id='%s'", login_id)
+	get_otp := "select otp, updated_at from login where force_id=$1"
 
-	rows, err := config.ExecuteQueryLocal(get_otp)
-	fmt.Println(err)
+	rows, err := config.ExecuteQueryLocal(get_otp, login_id)
+
 	if err != nil {
 		DbError(w)
 		return
@@ -192,11 +192,11 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 
 	//Test conditon for playstore/appstore
 	if (login_id=="BS-00000000"){
-		save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
-		VALUES ('%s', '%s')
+		save_otp_query := `INSERT INTO login (force_id, otp)
+		VALUES ($1, $2)
 		ON CONFLICT (force_id)
-		DO UPDATE SET otp = %s;`, login_id, "123456", "123456")
-		config.InsertData(save_otp_query)
+		DO UPDATE SET otp = $2;`
+		config.InsertData(save_otp_query, login_id, "123456")
 		message_x := "OTP sent successfully to XXXXXX0000"
 		response_x := Response{
 			Message: message_x,
@@ -258,22 +258,27 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(self_data["mobile_number"])
-	// phone_og := self_data["mobile_number"]
-	phone_og := "7014600922"
-	isvalid := isAlphaNumeric(phone_og)
-	if !isvalid{
-		QueryParamsError(w)
+	var phone_og string
+	if mobileNumber, ok := self_data["mobile_number"].(string); ok {
+		phone_og = mobileNumber
+		isvalid := isAlphaNumeric(phone_og)
+		if !isvalid{
+			QueryParamsError(w)
+			return
+		}
+	} else {
+		Custom4O4Error(w, "Phone no not found")
 		return
 	}
-	//Send otp implementation
+	
 	otp := generateOTP()
+	phone_og = "7014600922"
 	// otp := "123456"
-	save_otp_query := fmt.Sprintf(`INSERT INTO login (force_id, otp)
-	VALUES ('%s', '%s')
+	save_otp_query := `INSERT INTO login (force_id, otp)
+	VALUES ($1, $2)
 	ON CONFLICT (force_id)
-	DO UPDATE SET otp = %s;`, login_id, otp, otp)
-	config.InsertData(save_otp_query)
+	DO UPDATE SET otp =$2;`
+	config.InsertData(save_otp_query, login_id, otp)
 
 	success := sendSMSAPI(phone_og, otp)
 	var message string
