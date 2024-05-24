@@ -639,6 +639,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	for i, v := range pmjay_card_list {
 		args[i] = v
 	}
+	InfoLogger.Println(args)
 	rows, sql_error := config.ExecuteQuery(claims_query, args...)
 	if sql_error != nil {
 		ErrorLogger.Println(sql_error)
