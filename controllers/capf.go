@@ -633,6 +633,8 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 		claims
 	WHERE 
 		card_no in (%s);`, placeholderStr)
+	
+	InfoLogger.Println(claims_query)
 
 	args := make([]interface{}, len(pmjay_card_list))
 	for i, v := range pmjay_card_list {
@@ -648,7 +650,6 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	var dataList []UserClaim
 
 	for rows.Next() {
-		InfoLogger.Println("Row")
 		var data UserClaim
 		err := rows.Scan(&data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt, &data.WorkflowId, &data.HospName, &data.CardNo)
 		if err != nil {
