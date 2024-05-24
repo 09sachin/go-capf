@@ -635,8 +635,8 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	WHERE 
 		card_no in (%s);`, placeholderStr)
 
-	args := make([]interface{}, len(pmjay))
-	for i, v := range pmjay {
+	args := make([]interface{}, len(pmjay_card_list))
+	for i, v := range pmjay_card_list {
 		args[i] = v
 	}
 	rows, sql_error := config.ExecuteQuery(claims_query, args...)
