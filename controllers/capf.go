@@ -466,13 +466,13 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 	pmjay := claims.PmjayId
 	fmt.Println(id)
 
-	query := `select remarks, 
+	query := fmt.Sprintf(`select remarks, 
 			claim_sub_dt, case_no
 			from queries 
-			where card_no in $1
-			order by crt_dt `
+			where card_no in %s
+			order by crt_dt `, pmjay)
 
-	rows, sql_error := config.ExecuteQuery(query, pmjay)
+	rows, sql_error := config.ExecuteQuery(query)
 	if sql_error != nil {
 		DbError(w)
 		return
@@ -528,18 +528,18 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pmjay := claims.PmjayId
-	track_query := `SELECT 
+	track_query := fmt.Sprintf(`SELECT 
 		case_no,
 		claim_sub_dt,
 		process_desc,
 		crt_dt from 
 	track_case
 	WHERE 
-		case_no = $1 and 
-		card_no in $2
+		case_no = '%s' and 
+		card_no in %s
 	ORDER BY 
-    crt_dt DESC;`
-	rows, sql_error := config.ExecuteQuery(track_query,case_no, pmjay)
+    crt_dt DESC;`, case_no, pmjay)
+	rows, sql_error := config.ExecuteQuery(track_query)
 	if sql_error != nil {
 		DbError(w)
 		return
@@ -610,15 +610,6 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
     	nameMap[card_no] = name_person
     }
 
-	pmjay_card_list := card_list
-	InfoLogger.Println(pmjay_card_list)
-	placeholders := make([]string, len(pmjay_card_list))
-	for i := range placeholders {
-		placeholders[i] = fmt.Sprintf("$%d", i+1)
-	}
-
-	placeholderStr := strings.Join(placeholders, ", ")
-
 	claims_query := fmt.Sprintf(`select distinct
     case_no, 
     claim_sub_dt, 
@@ -632,24 +623,13 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	FROM 
 		claims
 	WHERE 
-		card_no in (%s);`, placeholderStr)
-	
-	InfoLogger.Println(claims_query)
+		card_no in %s;`, pmjay)
 
-	args := make([]interface{}, len(pmjay_card_list))
-	for i, v := range pmjay_card_list {
-		args[i] = v
-	}
-
-	rows, sql_error := config.ExecuteQuery(claims_query, args...)
+	rows, sql_error := config.ExecuteQuery(claims_query)
 	if sql_error != nil {
 		ErrorLogger.Println(sql_error)
 		DbError(w)
 		return
-	}
-
-	if rows == nil {
-		InfoLogger.Println("No rows returned.")
 	}
 	var dataList []UserClaim
 
