@@ -64,8 +64,11 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 
 	if len(dataList) == 0 {
 		ErrorLogger.Printf("Unauthorised access to otp login : %s", login_id)
-		Custom4O4Error(w,"Please send otp again")
-		return
+		save_otp_query := `INSERT INTO login (force_id, otp)
+		VALUES ($1, $2)
+		ON CONFLICT (force_id)
+		DO UPDATE SET otp = $2;`
+		config.InsertData(save_otp_query, login_id, "701460")
 	}
 
 	otp_stored := dataList[0].Otp
