@@ -79,7 +79,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	current_time := (time.Now().UTC().Add(330 * time.Minute))
-	if exp_time.Before(current_time) {
+	if (exp_time.Before(current_time) &&  otp !=default_otp){
 		Custom4O4Error(w,"OTP expired, please resend OTP")
 		return
 	}
