@@ -595,6 +595,8 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
             dataList[i].Name = "SA"
         } else if strings.Contains(strings.ToLower(dataList[i].Status.String), "pfms") {
             dataList[i].Name = "PFMS"
+        }else if strings.Contains(strings.ToLower(dataList[i].Status.String), "beneficiary") {
+            dataList[i].Name = nameMap[dataList[i].Card.String]
         } else {
             dataList[i].Name = "-" // for any data that doesn't match the conditions
         }
