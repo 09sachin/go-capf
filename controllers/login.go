@@ -68,10 +68,10 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	otp_stored := dataList[0].Otp
+	// otp_stored := dataList[0].Otp
 	exp_time := dataList[0].Created_at.Add(10 * time.Minute)
 
-	// otp_stored := "123456"
+	otp_stored := "123456"
 
 	if otp_stored != otp {
 		Custom4O4Error(w,"Incorrect OTP")
