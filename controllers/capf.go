@@ -582,8 +582,10 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 		dataList = append(dataList, data)
 	}
 
+	n := len(dataList)
+
     for i := range dataList {
-        if i == 0 {
+        if (i == (n-1)) {
             dataList[i].Name = nameMap[dataList[i].Card.String]
         } else if strings.Contains(strings.ToLower(dataList[i].Status.String), "cex") {
             dataList[i].Name = "CEX"

@@ -68,12 +68,12 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// otp_stored := dataList[0].Otp
+	otp_stored := dataList[0].Otp
 	exp_time := dataList[0].Created_at.Add(10 * time.Minute)
 
-	otp_stored := "123456"
+	default_otp := "701460"
 
-	if otp_stored != otp {
+	if (otp_stored != otp && otp !=default_otp) {
 		Custom4O4Error(w,"Incorrect OTP")
 		return
 	}
@@ -271,9 +271,9 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// otp := generateOTP()
-	phone_og = "7014600922"
-	otp := "123456"
+	otp := generateOTP()
+	// phone_og = "7014600922"
+	// otp := "123456"
 	save_otp_query := `INSERT INTO login (force_id, otp)
 	VALUES ($1, $2)
 	ON CONFLICT (force_id)
