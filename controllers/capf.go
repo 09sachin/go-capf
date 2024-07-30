@@ -528,10 +528,38 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pmjay := claims.PmjayId
+	names := claims.Names
+	var names_list []string
+	elements := strings.Split(names, ", ")
+	names_list = append(names_list, elements...)
+	var card_list []string
+	len_ids := len(pmjay)
+	if (len_ids< 2){
+		ErrorLogger.Println(pmjay)
+		JsonParseError(w)
+		return
+	}
+
+	pmjay_card := pmjay[1:len_ids-1]
+	elements_card := strings.Split(pmjay_card, ", ")
+	card_list = append(card_list, elements_card...)
+	nameMap := make(map[string]string)
+
+	for i := 0; i < len(names_list); i++ {
+		card_len := len(card_list[i])
+		names_len := len(names_list[i])
+		name_person := names_list[i][1:names_len-1]
+		card_no := card_list[i][1:card_len-1]
+    	nameMap[card_no] = name_person
+    }
+
 	track_query := fmt.Sprintf(`SELECT 
 		case_no,
 		claim_sub_dt,
 		process_desc,
+		remarks,
+		amount,
+		card_no,
 		crt_dt from 
 	track_case
 	WHERE 
@@ -547,12 +575,28 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 	var dataList []TrackCase
 	for rows.Next() {
 		var data TrackCase
-		err := rows.Scan(&data.CaseNo, &data.ClaimSubmissionDate, &data.Status, &data.WorkflowDate)
+		err := rows.Scan(&data.CaseNo, &data.ClaimSubmissionDate, &data.Status, &data.Remarks, &data.Amount, &data.Card, &data.WorkflowDate)
 		if err != nil {
 			fmt.Println(err)
 		}
 		dataList = append(dataList, data)
 	}
+
+    for i := range dataList {
+        if i == 0 {
+            dataList[i].Name = nameMap[dataList[i].Card.String]
+        } else if strings.Contains(strings.ToLower(dataList[i].Status.String), "cex") {
+            dataList[i].Name = "CEX"
+        } else if strings.Contains(strings.ToLower(dataList[i].Status.String), "cpd") {
+            dataList[i].Name = "CPD"
+        } else if strings.Contains(strings.ToLower(dataList[i].Status.String), "sa") || strings.Contains(strings.ToLower(dataList[i].Status.String), "sanctioning authority") {
+            dataList[i].Name = "SA"
+        } else if strings.Contains(strings.ToLower(dataList[i].Status.String), "pfms") {
+            dataList[i].Name = "PFMS"
+        } else {
+            dataList[i].Name = "-" // for any data that doesn't match the conditions
+        }
+    }
 
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
@@ -686,4 +730,53 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 	if errr != nil {
 		JsonEncodeError(w)
 	}
+}
+
+
+func UpdateClaimsAPI(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+
+	url := "https://apis.pmjay.gov.in/convergence/update/claimpending"
+	response, err := http.Post(url, "application/json", r.Body)
+
+	if err != nil {
+		ErrorLogger.Printf("Update API failed with error : ")
+		ErrorLogger.Println(err)
+		JsonEncodeError(w)
+	}
+	defer response.Body.Close()
+
+
+	errr := json.NewEncoder(w).Encode(response.Body)
+	if errr != nil {
+		JsonEncodeError(w)
+	}
+
+}
+
+
+func GetUpdateClaimsFieldsAPI(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+	query_params := r.URL.Query()
+	case_no := query_params.Get("caseId")
+
+	url := fmt.Sprintf("https://apis-uat.pmjay.gov.in/convergence/fetch/attachments?caseId=%s&stateCode=91", case_no)
+	response, err := http.Get(url)
+
+	if err != nil {
+		ErrorLogger.Printf("Fetch API failed with error : ")
+		ErrorLogger.Println(err)
+		JsonEncodeError(w)
+	}
+	defer response.Body.Close()
+
+
+	errr := json.NewEncoder(w).Encode(response.Body)
+	if errr != nil {
+		JsonEncodeError(w)
+	}
+
 }

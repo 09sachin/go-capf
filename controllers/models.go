@@ -81,6 +81,10 @@ type TrackCase struct {
 	ClaimSubmissionDate CustomString
 	Status              CustomString
 	WorkflowDate        CustomString
+	Remarks				CustomString
+	Amount				CustomString
+	Name                string
+	Card				CustomString
 }
 
 type UserClaim struct {

@@ -173,6 +173,8 @@ func Init() *mux.Router {
 	dataRoute.HandleFunc("/queries", controllers.Queries).Methods("GET")
 	dataRoute.HandleFunc("/track-case", controllers.TrackCases).Methods("GET")
 	dataRoute.HandleFunc("/claims", controllers.UserClaims).Methods("GET")
+    dataRoute.HandleFunc("/claims/get-fields", controllers.GetUpdateClaimsFieldsAPI).Methods("GET")
+    dataRoute.HandleFunc("/claims/update-api", controllers.UpdateClaimsAPI).Methods("POST")
 
 	return route
 }

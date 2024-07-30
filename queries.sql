@@ -51,7 +51,9 @@ CREATE MATERIALIZED VIEW track_case AS
   SELECT reimb.case_no,                                                                               
      reimb.claim_sub_dt,                                                                              
      workflow.process_desc,                                                                           
-     wa.crt_dt,                                                                                       
+     wa.crt_dt, 
+     wa.remarks, 
+     wa.amount,                                                                                    
      reimb.card_no                                                                                    
     FROM ((tms_t_case_workflow_audit wa                                                               
       JOIN case_dump_capf_reim_pfms reimb ON (((wa.transaction_id)::text = (reimb.patient_no)::text)))
