@@ -57,7 +57,7 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		var data OTP
 		err := rows.Scan(&data.Otp, &data.Created_at)
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
 		}
 		dataList = append(dataList, data)
 	}
@@ -332,7 +332,6 @@ func sendSMSAPI(phoneNo, otp string) bool {
 	defer response.Body.Close()
 
 	if response.StatusCode == http.StatusOK {
-		fmt.Println("SMS sent successfully")
 		return true
 	}
 

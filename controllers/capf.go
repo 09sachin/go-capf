@@ -39,7 +39,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 		jsonData, err := json.MarshalIndent(dataList, "", "    ")
 	
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
 			JsonParseError(w)
 			return
 		}
@@ -90,7 +90,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var self_data map[string]interface{}
-	fmt.Println(self_data["id"])
+	InfoLogger.Println(self_data["id"])
 	var capfData CapfProdNoImageRefresh
 	for _, item := range detailsArray {
 		// Convert the item to a map[string]interface{}
@@ -116,7 +116,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := json.MarshalIndent(dataList, "", "    ")
 
 	if err != nil {
-		fmt.Println(err)
+		ErrorLogger.Println(err)
 		JsonParseError(w)
 		return
 	}
@@ -169,7 +169,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 		jsonData, err := json.MarshalIndent(dataList, "", "    ")
 	
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
 			JsonParseError(w)
 			return
 		}
@@ -221,7 +221,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var self_data map[string]interface{}
-	fmt.Println(self_data["id"])
+	InfoLogger.Println(self_data["id"])
 	var capfData UserDetail
 	for _, item := range detailsArray {
 		// Convert the item to a map[string]interface{}
@@ -336,7 +336,7 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 		var data Hospital
 		err := rows.Scan(&data.EmpanelmentType, &data.HospName, &data.HospContact, &data.HospLatitude, &data.HospLongitude)
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
 		}
 		dataList = append(dataList, data)
 	}
@@ -427,7 +427,7 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 		var data NearestHospital
 		err := rows.Scan(&data.HospName, &data.HospContact, &data.HospLatitude, &data.HospLongitude, &data.EmpanelmentType)
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
 			continue
 		}
 		dataList = append(dataList, data)
@@ -464,7 +464,7 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 
 	id := claims.Username
 	pmjay := claims.PmjayId
-	fmt.Println(id)
+	InfoLogger.Println(id)
 
 	query := fmt.Sprintf(`select remarks, 
 			claim_sub_dt, case_no
@@ -483,7 +483,7 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 		var data Query
 		err := rows.Scan(&data.Remarks, &data.SubmissionDate, &data.CaseNo)
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
 		}
 		dataList = append(dataList, data)
 	}
@@ -577,7 +577,7 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 		var data TrackCase
 		err := rows.Scan(&data.CaseNo, &data.ClaimSubmissionDate, &data.Status, &data.Remarks, &data.Amount, &data.Card, &data.WorkflowDate)
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
 		}
 		dataList = append(dataList, data)
 	}
@@ -685,7 +685,7 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 		var data UserClaim
 		err := rows.Scan(&data.CaseNo, &data.ClaimSubDate, &data.Status, &data.SubAmt, &data.AppAmt, &data.PaidAmt, &data.WorkflowId, &data.HospName, &data.CardNo)
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
 		}
 		card_no := data.CardNo.String
 		mem_name := nameMap[card_no]

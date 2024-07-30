@@ -113,7 +113,6 @@ func InsertData(query string, args ...interface{}) error {
         return err
     }
 
-    fmt.Println("Data inserted successfully")
     return nil
 }
 
@@ -130,6 +129,5 @@ func UpdateData(query string, args ...interface{}) error {
         return err
     }
 
-    fmt.Println("Data updated successfully")
     return nil
 }
