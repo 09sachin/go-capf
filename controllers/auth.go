@@ -20,10 +20,10 @@ type TokenResponse struct {
 func generateToken() (string, error) {
 	form := url.Values{}
 	form.Add("grant_type", "password")
-	form.Add("client_id", "775863c3-38aa-451e-90da-0d145e2ce4fe")
-	form.Add("client_secret", "cXhVcfpUJpKOri_EG4XqKlmOj6ZvmPMa8AIEnMsPU7gkw3ET5purRwKOOfF0qIHbB7HXRhrQ2jnU8wA07542Dg")
-	form.Add("username", "oauthclient")
-	form.Add("password", "Password@1234")
+	form.Add("client_id", PMJAY_CLIENT_ID)
+	form.Add("client_secret", PMJAY_CLIENT_SECRET)
+	form.Add("username", PMJAY_CLIENT_USERNAME)
+	form.Add("password", PMJAY_CLIENT_PASSWORD)
 
 	req, err := http.NewRequest("POST", "https://apis.pmjay.gov.in/idmtoken", bytes.NewBufferString(form.Encode()))
 	if err != nil {
