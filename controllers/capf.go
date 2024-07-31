@@ -7,6 +7,7 @@ import (
 	"github.com/09sachin/go-capf/config"
 	"net/http"
 	"strings"
+	"io/ioutil"
 )
 
 
@@ -738,49 +739,55 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 
 
 func UpdateClaimsAPI(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
 
-	w.Header().Set("Content-Type", "application/json")
+    url := fmt.Sprintf("%s/update/claimpending", CLAIMS_UPDATE_BASE_URL)
+    response, err := http.Post(url, "application/json", r.Body)
+    if err != nil {
+        ErrorLogger.Printf("Update API failed with error: %v\n", err)
+        JsonEncodeError(w)
+        return
+    }
+    defer response.Body.Close()
 
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        ErrorLogger.Printf("Reading response body failed with error: %v\n", err)
+        JsonEncodeError(w)
+        return
+    }
 
-	url := "https://apis.pmjay.gov.in/convergence/update/claimpending"
-	response, err := http.Post(url, "application/json", r.Body)
-
-	if err != nil {
-		ErrorLogger.Printf("Update API failed with error : ")
-		ErrorLogger.Println(err)
-		JsonEncodeError(w)
-	}
-	defer response.Body.Close()
-
-
-	errr := json.NewEncoder(w).Encode(response.Body)
-	if errr != nil {
-		JsonEncodeError(w)
-	}
-
+    _, err = w.Write(body)
+    if err != nil {
+        ErrorLogger.Printf("Writing response body failed with error: %v\n", err)
+        JsonEncodeError(w)
+    }
 }
 
-
 func GetUpdateClaimsFieldsAPI(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    query_params := r.URL.Query()
+    case_no := query_params.Get("caseId")
 
-	w.Header().Set("Content-Type", "application/json")
-	query_params := r.URL.Query()
-	case_no := query_params.Get("caseId")
+    url := fmt.Sprintf("%s/fetch/attachments?caseId=%s&stateCode=91", CLAIMS_UPDATE_BASE_URL, case_no)
+    response, err := http.Get(url)
+    if err != nil {
+        ErrorLogger.Printf("Fetch API failed with error: %v\n", err)
+        JsonEncodeError(w)
+        return
+    }
+    defer response.Body.Close()
 
-	url := fmt.Sprintf("https://apis-uat.pmjay.gov.in/convergence/fetch/attachments?caseId=%s&stateCode=91", case_no)
-	response, err := http.Get(url)
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        ErrorLogger.Printf("Reading response body failed with error: %v\n", err)
+        JsonEncodeError(w)
+        return
+    }
 
-	if err != nil {
-		ErrorLogger.Printf("Fetch API failed with error : ")
-		ErrorLogger.Println(err)
-		JsonEncodeError(w)
-	}
-	defer response.Body.Close()
-
-
-	errr := json.NewEncoder(w).Encode(response.Body)
-	if errr != nil {
-		JsonEncodeError(w)
-	}
-
+    _, err = w.Write(body)
+    if err != nil {
+        ErrorLogger.Printf("Writing response body failed with error: %v\n", err)
+        JsonEncodeError(w)
+    }
 }
