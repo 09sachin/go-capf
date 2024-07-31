@@ -739,10 +739,35 @@ func UserClaims(w http.ResponseWriter, r *http.Request) {
 
 
 func UpdateClaimsAPI(w http.ResponseWriter, r *http.Request) {
+
     w.Header().Set("Content-Type", "application/json")
 
+	token, err := generateToken()
+
+    if err != nil {
+        ErrorLogger.Printf("Token generation failed with error: %v\n", err)
+		msg := "Failed to update. Internal server error"
+        Custom4O4Error(w, msg)
+        return
+    }
+
     url := fmt.Sprintf("%s/update/claimpending", CLAIMS_UPDATE_BASE_URL)
-    response, err := http.Post(url, "application/json", r.Body)
+	req, err := http.NewRequest("POST", url, r.Body)
+    if err != nil {
+        ErrorLogger.Printf("Failed to create new request: %v\n", err)
+        JsonEncodeError(w)
+        return
+    }
+    req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("Authorization", token)
+
+    client := &http.Client{}
+    response, err := client.Do(req)
+	if response.StatusCode != http.StatusOK{
+		msg := "Failed to update. Internal server error"
+        Custom4O4Error(w, msg)
+		return
+	}
     if err != nil {
         ErrorLogger.Printf("Update API failed with error: %v\n", err)
         JsonEncodeError(w)
@@ -769,8 +794,30 @@ func GetUpdateClaimsFieldsAPI(w http.ResponseWriter, r *http.Request) {
     query_params := r.URL.Query()
     case_no := query_params.Get("caseId")
 
+	token, err := generateToken()
+	
+    if err != nil {
+        ErrorLogger.Printf("Token generation failed with error: %v\n", err)
+        msg := "Failed to update. Internal server error"
+        Custom4O4Error(w, msg)
+    }
+
     url := fmt.Sprintf("%s/fetch/attachments?caseId=%s&stateCode=91", CLAIMS_UPDATE_BASE_URL, case_no)
-    response, err := http.Get(url)
+    req, err := http.NewRequest("GET", url, nil)
+    if err != nil {
+        ErrorLogger.Printf("Failed to create new request: %v\n", err)
+        JsonEncodeError(w)
+        return
+    }
+    req.Header.Set("Authorization", token)
+
+    client := &http.Client{}
+    response, err := client.Do(req)
+	if response.StatusCode != http.StatusOK{
+		msg := "Failed to get update fields. Internal server error"
+        Custom4O4Error(w, msg)
+		return
+	}
     if err != nil {
         ErrorLogger.Printf("Fetch API failed with error: %v\n", err)
         JsonEncodeError(w)
