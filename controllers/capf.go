@@ -742,6 +742,12 @@ func UpdateClaimsAPI(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Content-Type", "application/json")
 
+	_, err := getClaimsFromRequest(r)
+	if err != nil {
+		UnauthorisedError(w)
+		return 
+	}
+
 	token, err := generateToken()
 
     if err != nil {
@@ -793,6 +799,12 @@ func GetUpdateClaimsFieldsAPI(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     query_params := r.URL.Query()
     case_no := query_params.Get("caseId")
+
+	_, err := getClaimsFromRequest(r)
+	if err != nil {
+		UnauthorisedError(w)
+		return
+	}
 
 	token, err := generateToken()
 	
