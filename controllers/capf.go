@@ -770,9 +770,21 @@ func UpdateClaimsAPI(w http.ResponseWriter, r *http.Request) {
     client := &http.Client{}
     response, err := client.Do(req)
 	if response.StatusCode != http.StatusOK{
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(response.Body)
-		return
+		body, _ := ioutil.ReadAll(response.Body)
+		var errorResponse map[string]interface{}
+        if err := json.Unmarshal(body, &errorResponse); err != nil {
+            ErrorLogger.Printf("Failed to unmarshal error response: %v\n", err)
+            Custom4O4Error(w,"Unknown error occured")
+            return
+        }
+        errorMessage := "Unknown error occurred"
+		if errData, ok := errorResponse["error"].(map[string]interface{}); ok {
+			if msg, ok := errData["message"].(string); ok {
+				errorMessage = msg
+			}
+		}
+		Custom4O4Error(w,errorMessage)
+        return
 	}
     if err != nil {
         ErrorLogger.Printf("Update API failed with error: %v\n", err)
@@ -826,9 +838,21 @@ func GetUpdateClaimsFieldsAPI(w http.ResponseWriter, r *http.Request) {
     client := &http.Client{}
     response, err := client.Do(req)
 	if response.StatusCode != http.StatusOK{
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(response.Body)
-		return
+		body, _ := ioutil.ReadAll(response.Body)
+		var errorResponse map[string]interface{}
+        if err := json.Unmarshal(body, &errorResponse); err != nil {
+            ErrorLogger.Printf("Failed to unmarshal error response: %v\n", err)
+            Custom4O4Error(w,"Unknown error occured")
+            return
+        }
+        errorMessage := "Unknown error occurred"
+		if errData, ok := errorResponse["error"].(map[string]interface{}); ok {
+			if msg, ok := errData["message"].(string); ok {
+				errorMessage = msg
+			}
+		}
+		Custom4O4Error(w,errorMessage)
+        return
 	}
     if err != nil {
         ErrorLogger.Printf("Fetch API failed with error: %v\n", err)
