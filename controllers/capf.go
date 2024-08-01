@@ -770,8 +770,8 @@ func UpdateClaimsAPI(w http.ResponseWriter, r *http.Request) {
     client := &http.Client{}
     response, err := client.Do(req)
 	if response.StatusCode != http.StatusOK{
-		msg := "Failed to update. Internal server error"
-        Custom4O4Error(w, msg)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(response.Body)
 		return
 	}
     if err != nil {
@@ -826,8 +826,8 @@ func GetUpdateClaimsFieldsAPI(w http.ResponseWriter, r *http.Request) {
     client := &http.Client{}
     response, err := client.Do(req)
 	if response.StatusCode != http.StatusOK{
-		msg := "Failed to get update fields. Internal server error"
-        Custom4O4Error(w, msg)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(response.Body)
 		return
 	}
     if err != nil {
