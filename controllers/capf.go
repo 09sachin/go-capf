@@ -471,7 +471,7 @@ func Queries(w http.ResponseWriter, r *http.Request) {
 			claim_sub_dt, case_no
 			from queries 
 			where card_no in %s
-			order by crt_dt `, pmjay)
+			order by crt_dt DESC`, pmjay)
 
 	rows, sql_error := config.ExecuteQuery(query)
 	if sql_error != nil {
@@ -567,7 +567,7 @@ func TrackCases(w http.ResponseWriter, r *http.Request) {
 		case_no = '%s' and 
 		card_no in %s
 	ORDER BY 
-    crt_dt DESC;`, case_no, pmjay)
+    crt_dt DESC limit 200;`, case_no, pmjay)
 	rows, sql_error := config.ExecuteQuery(track_query)
 	if sql_error != nil {
 		DbError(w)
