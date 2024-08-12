@@ -64,25 +64,25 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 
 	if len(dataList) == 0 {
 		ErrorLogger.Printf("Unauthorised access to otp login : %s", login_id)
-		save_otp_query := `INSERT INTO login (force_id, otp)
-		VALUES ($1, $2)
-		ON CONFLICT (force_id)
-		DO UPDATE SET otp = $2;`
-		config.InsertData(save_otp_query, login_id, "701460")
+		// save_otp_query := `INSERT INTO login (force_id, otp)
+		// VALUES ($1, $2)
+		// ON CONFLICT (force_id)
+		// DO UPDATE SET otp = $2;`
+		// config.InsertData(save_otp_query, login_id, "701460")
 	}
 
 	otp_stored := dataList[0].Otp
 	exp_time := dataList[0].Created_at.Add(10 * time.Minute)
 
-	default_otp := "701460"
+	// default_otp := "701460"
 
-	if (otp_stored != otp && otp !=default_otp) {
+	if (otp_stored != otp) {
 		Custom4O4Error(w,"Incorrect OTP")
 		return
 	}
 
 	current_time := (time.Now().UTC().Add(330 * time.Minute))
-	if (exp_time.Before(current_time) &&  otp !=default_otp){
+	if (exp_time.Before(current_time)){
 		Custom4O4Error(w,"OTP expired, please resend OTP")
 		return
 	}

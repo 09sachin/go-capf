@@ -805,6 +805,7 @@ func UpdateClaimsAPI(w http.ResponseWriter, r *http.Request) {
         ErrorLogger.Printf("Writing response body failed with error: %v\n", err)
         JsonEncodeError(w)
     }
+	InfoLogger.Println("Claim updated succesfully")
 }
 
 func GetUpdateClaimsFieldsAPI(w http.ResponseWriter, r *http.Request) {
@@ -873,4 +874,5 @@ func GetUpdateClaimsFieldsAPI(w http.ResponseWriter, r *http.Request) {
         ErrorLogger.Printf("Writing response body failed with error: %v\n", err)
         JsonEncodeError(w)
     }
+	InfoLogger.Println("Claim list fetched")
 }
