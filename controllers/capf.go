@@ -91,7 +91,7 @@ func DashboardData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var self_data map[string]interface{}
-	InfoLogger.Println(self_data["id"])
+	var _ = self_data["id"]
 	var capfData CapfProdNoImageRefresh
 	for _, item := range detailsArray {
 		// Convert the item to a map[string]interface{}
@@ -222,7 +222,7 @@ func UserDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var self_data map[string]interface{}
-	InfoLogger.Println(self_data["id"])
+	var _ = self_data["id"]
 	var capfData UserDetail
 	for _, item := range detailsArray {
 		// Convert the item to a map[string]interface{}
