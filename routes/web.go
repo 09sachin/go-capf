@@ -79,7 +79,7 @@ func (rl *RateLimiter) RateLimitMiddleware(next http.Handler, limit int, duratio
 
             // Check if the request count exceeds the limit
             if len(rl.requests[ip]) >= limit {
-                controllers.ErrorLogger.Println("Rate limit exceeded")
+                controllers.ErrorLogger.Println("Rate limit exceeded - Attack")
                 http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
                 return
             }
@@ -141,7 +141,7 @@ func (rl *RateLimiter) LoginRateLimitMiddleware(next http.Handler, limit int, du
 
             // Check if the request count exceeds the limit
             if len(rl.requests[ip]) >= limit {
-                controllers.ErrorLogger.Println("Rate limit exceeded")
+                controllers.ErrorLogger.Printf("Rate limit exceeded : %s", ip)
                 http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
                 return
             }
