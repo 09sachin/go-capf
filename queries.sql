@@ -58,3 +58,7 @@ CREATE MATERIALIZED VIEW track_case AS
     FROM ((tms_t_case_workflow_audit wa                                                               
       JOIN case_dump_capf_reim_pfms reimb ON (((wa.transaction_id)::text = (reimb.patient_no)::text)))
       JOIN workflow_table workflow ON ((wa.next_workflow_id = workflow.workflow_id)));
+
+
+CREATE MATERIALIZED VIEW hospitals AS
+  SELECT * from hem_t_hosp_info;

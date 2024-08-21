@@ -321,9 +321,9 @@ func Hospitals(w http.ResponseWriter, r *http.Request) {
 
 	var hospital_query string
 	if distict != "" {
-		hospital_query = fmt.Sprintf("select empanelment_type, hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' and state='%s' and district='%s' LIMIT %d OFFSET %d", empanelment_type, state, distict, pageSize, offset)
+		hospital_query = fmt.Sprintf("select empanelment_type, hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude from  hospitals WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' and state='%s' and district='%s' LIMIT %d OFFSET %d", empanelment_type, state, distict, pageSize, offset)
 	} else {
-		hospital_query = fmt.Sprintf("select empanelment_type, hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude from  hem_t_hosp_info WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' and state='%s' LIMIT %d OFFSET %d", empanelment_type, state, pageSize, offset)
+		hospital_query = fmt.Sprintf("select empanelment_type, hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude from  hospitals WHERE empanelment_type in %s and active_yn ='Y' and hosp_status ='Approved' and state='%s' LIMIT %d OFFSET %d", empanelment_type, state, pageSize, offset)
 	}
 
 	rows, sql_error := config.ExecuteQuery(hospital_query)
@@ -395,7 +395,7 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filter_hosp := fmt.Sprintf(` SELECT hosp_name, hosp_contact_no, hosp_latitude, hosp_longitude, empanelment_type
-		FROM hem_t_hosp_info
+		FROM hospitals
 		WHERE 
 			CASE WHEN hosp_latitude ~ '^-?\d+(\.\d+)?$' 
 				THEN CAST(hosp_latitude AS DOUBLE PRECISION) 
