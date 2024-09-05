@@ -7,7 +7,7 @@ import (
 var (
 	InfoLogger  *log.Logger
 	ErrorLogger *log.Logger
-	Beneficiary_URL = getEnv("SEARCH_URL")
+	Beneficiary_URL = "https://apisprod.nha.gov.in/pmjay/prodbis/capfService/v3.0/searchFamilyDetails"
 	SMS_Username = getEnv("SMS_USER")
 	SMS_Password = getEnv("SMS_PASS")
 	CLAIMS_UPDATE_BASE_URL = getEnv("CLAIMS_UPDATE_BASE_URL")
