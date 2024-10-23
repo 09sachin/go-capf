@@ -365,11 +365,11 @@ func FilterHospital(w http.ResponseWriter, r *http.Request) {
 	
 	w.Header().Set("Content-Type", "application/json")
 
-	_, err := getClaimsFromRequest(r)
-	if err != nil {
-		UnauthorisedError(w)
-		return 
-	}
+	// _, err := getClaimsFromRequest(r)
+	// if err != nil {
+	// 	UnauthorisedError(w)
+	// 	return 
+	// }
 
 	query_params := r.URL.Query()
 	radiusStr := query_params.Get("radius")
