@@ -9,7 +9,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
-	_ "net/url"
+	_"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -324,17 +324,47 @@ func sendSMSAPI(phoneNo, otp string) bool {
 	entityID := "1001548700000010184"
 	tempID := "1007170748130898041"
 	source := "NHASMS"
+	phoneNo = "6377035564"
+	
+	payload := map[string]string{
+		"userid":   username,
+		"password": password,
+		"mobile": phoneNo,
+		"senderid": source,
+		"dltEntityId": entityID,
+		"msg": msg,
+		"sendMethod": "quick",
+		"msgType": "text",
+		"dltTemplateId":tempID,
+		"output": "json",
+		"duplicatecheck": "true",
+	}
 
-	urlStr := fmt.Sprintf("https://sms6.rmlconnect.net/bulksms/bulksms?username=%s&password=%s&type=0&dlr=1&destination=%s&source=%s&message=%s&entityid=%s&tempid=%s",
-		username, password, phoneNo, source, msg, entityID, tempID)
+	// Marshal payload to JSON
+	jsonPayload, err := json.Marshal(payload)
 
-	response, err := http.Post(urlStr, "application/json", nil)
+	if err != nil {
+		return false
+	}
+	
+	urlStr := "https://sbx.sms24hours.com/SMSApi/send"
+
+	response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		ErrorLogger.Printf("SMS API failed with error : ")
 		ErrorLogger.Println(err)
 		return false
 	}
 	defer response.Body.Close()
+
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		fmt.Printf("Failed to read response body: %v\n", err)
+		return false
+	}
+	bodyString := string(bodyBytes)
+
+	fmt.Println("Response Body:", bodyString)
 
 	if response.StatusCode == http.StatusOK {
 		return true
