@@ -379,7 +379,7 @@ func sendSMSAPInew(phoneNo, otp string) bool {
 		return false
 	}
 	
-	urlStr := "https://172.105.59.173/SMSApi/send"
+	urlStr := "https://172.105.50.198/SMSApi/send"
 
 	response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
