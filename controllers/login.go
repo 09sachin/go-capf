@@ -356,7 +356,7 @@ func sendSMSAPInew(phoneNo, otp string) bool {
 	entityID := "1001548700000010184"
 	tempID := "1007170748130898041"
 	source := "NHASMS"
-	phoneNo = "6377035564"
+	
 	
 	payload := map[string]string{
 		"userid":   username,
