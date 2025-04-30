@@ -285,7 +285,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	DO UPDATE SET otp =$2;`
 	config.InsertData(save_otp_query, login_id, otp)
 
-	success := sendSMSAPI(phone_og, otp)
+	success := sendSMSAPInew(phone_og, otp)
 	var message string
 
 	masked_phone := maskPhoneNumber(phone_og)
@@ -324,7 +324,6 @@ func sendSMSAPI(phoneNo, otp string) bool {
 	entityID := "1001548700000010184"
 	tempID := "1007170748130898041"
 	source := "NHASMS"
-	phoneNo = "6377035564"
 
 	urlStr := fmt.Sprintf("https://sms6.rmlconnect.net/bulksms/bulksms?username=%s&password=%s&type=0&dlr=1&destination=%s&source=%s&message=%s&entityid=%s&tempid=%s",
 		username, password, phoneNo, source, msg, entityID, tempID)
@@ -380,7 +379,7 @@ func sendSMSAPInew(phoneNo, otp string) bool {
 		return false
 	}
 	
-	urlStr := "https://smpp1.sms24hours.com/SMSApi/send"
+	urlStr := "https://172.105.50.198/SMSApi/send"
 
 	response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
