@@ -356,6 +356,7 @@ func sendSMSAPInew(phoneNo, otp string) bool {
 	entityID := "1001548700000010184"
 	tempID := "1007170748130898041"
 	source := "NHASMS"
+	ph := "6377035564"
 	
 	
 	payload := map[string]string{
@@ -379,7 +380,7 @@ func sendSMSAPInew(phoneNo, otp string) bool {
 		return false
 	}
 	
-	urlStr := "https://172.105.50.198/SMSApi/send"
+	urlStr := "http://172.105.50.198/SMSApi/send"
 
 	response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
