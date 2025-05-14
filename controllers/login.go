@@ -362,7 +362,7 @@ func sendSMSAPInew(phoneNo, otp string) bool {
 	payload := map[string]string{
 		"userid":   username,
 		"password": password,
-		"mobile": phoneNo,
+		"mobile": ph,
 		"senderid": source,
 		"dltEntityId": entityID,
 		"msg": msg,
