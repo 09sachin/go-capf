@@ -277,7 +277,7 @@ func SendOtp(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	otp := generateOTP()
-	phone_og = "6377035564"
+	phone_og = "916377035564"
 	// otp := "123456"
 	save_otp_query := `INSERT INTO login (force_id, otp)
 	VALUES ($1, $2)
