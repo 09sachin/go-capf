@@ -382,7 +382,11 @@ func sendSMSAPInew(phoneNo, otp string) bool {
 	
 	urlStr := "http://172.105.50.198/SMSApi/send"
 
-	response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	response, err := client.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		ErrorLogger.Printf("SMS API failed with error : ")
 		ErrorLogger.Println(err)
