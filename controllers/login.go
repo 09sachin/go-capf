@@ -349,12 +349,12 @@ func sendSMSAPInew(phoneNo, otp string) bool {
 	if otp=="123456"{
 		return true
 	}
-	msg := "Dear User,\nOTP to validate your Allied and Healthcare Institute Registry application is 123456. This is One Time Password will be valid for 10 mins.\nABDM, National Health Authority"
+	msg := "Dear%20User%2C%0AYour%20OTP%20to%20access%20CAPF%20application%20is%20ABCDEF.%20It%20will%20be%20valid%20for%203%20minutes.%0ANHA"
 	msg = strings.Replace(msg, "ABCDEF", otp, -1)
 	username := SMS_Username
 	password := SMS_Password
 	entityID := "1001548700000010184"
-	tempID := "1007169865765792689"
+	tempID := "1007170748130898041"
 	source := "NHASMS"
 	
 	
@@ -381,11 +381,11 @@ func sendSMSAPInew(phoneNo, otp string) bool {
 	
 	urlStr := "http://172.105.50.198/SMSApi/send"
 
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
+	// client := &http.Client{
+	// 	Timeout: 10 * time.Second,
+	// }
 
-	response, err := client.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
+	response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		ErrorLogger.Printf("SMS API failed with error : ")
 		ErrorLogger.Println(err)
