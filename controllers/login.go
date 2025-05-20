@@ -25,21 +25,6 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	phone_og := "916377035564"
-	otp := "123456"
-	success := sendSMSAPInew(phone_og, otp)
-	var message string
-
-	masked_phone := maskPhoneNumber(phone_og)
-	
-	if success {
-		message = fmt.Sprintf("OTP sent successfully to %s", masked_phone)
-	} else {
-		message = fmt.Sprintf("Failed to send OTP to %s", masked_phone)
-	}
-
-	InfoLogger.Println(message)
-
 	// Unmarshal the JSON data into a struct
 	var requestData RequestBody
 	err = json.Unmarshal(body, &requestData)
