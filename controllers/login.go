@@ -379,7 +379,7 @@ func sendSMSAPInew(phoneNo, otp string) bool {
 		return false
 	}
 	
-	urlStr := "http://172.105.50.198/SMSApi/send"
+	urlStr := "http://172.105.57.57/SMSApi/sendv2"
 
 	// client := &http.Client{
 	// 	Timeout: 10 * time.Second,
