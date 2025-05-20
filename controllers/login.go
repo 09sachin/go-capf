@@ -38,6 +38,8 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 		message = fmt.Sprintf("Failed to send OTP to %s", masked_phone)
 	}
 
+	InfoLogger.Println(message)
+
 	// Unmarshal the JSON data into a struct
 	var requestData RequestBody
 	err = json.Unmarshal(body, &requestData)
