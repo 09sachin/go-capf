@@ -8,6 +8,7 @@ import (
 	_ "github.com/09sachin/go-capf/models"
 	"io"
 	"math/rand"
+	"mime/multipart"
 	"net/http"
 	_ "net/url"
 	"strconv"
@@ -362,66 +363,63 @@ func sendSMSAPI(phoneNo, otp string) bool {
 
 
 func sendSMSAPInew(phoneNo, otp string) bool {
-	if otp=="123456"{
+	if otp == "123456" {
 		return true
 	}
+
 	msg := "Dear%20User%2C%0AYour%20OTP%20to%20access%20CAPF%20application%20is%20ABCDEF.%20It%20will%20be%20valid%20for%203%20minutes.%0ANHA"
 	msg = strings.Replace(msg, "ABCDEF", otp, -1)
+
 	username := SMS_Username
 	password := SMS_Password
 	entityID := "1001548700000010184"
 	tempID := "1007170748130898041"
 	source := "NHASMS"
-	
-	
-	payload := map[string]string{
-		"userid":   username,
-		"password": password,
-		"mobile": phoneNo,
-		"senderid": source,
-		"dltEntityId": entityID,
-		"msg": msg,
-		"sendMethod": "quick",
-		"msgType": "text",
-		"dltTemplateId":tempID,
-		"output": "json",
-		"duplicatecheck": "true",
-	}
 
-	// Marshal payload to JSON
-	jsonPayload, err := json.Marshal(payload)
+	// Prepare multipart form data
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
 
+	writer.WriteField("userid", username)
+	writer.WriteField("password", password)
+	writer.WriteField("mobile", phoneNo)
+	writer.WriteField("senderid", source)
+	writer.WriteField("dltEntityId", entityID)
+	writer.WriteField("msg", msg)
+	writer.WriteField("sendMethod", "quick")
+	writer.WriteField("msgType", "text")
+	writer.WriteField("dltTemplateId", tempID)
+	writer.WriteField("output", "json")
+	writer.WriteField("duplicatecheck", "true")
+	writer.Close()
+
+	req, err := http.NewRequest("POST", "http://172.105.57.57/SMSApi/send", &buf)
 	if err != nil {
+		ErrorLogger.Printf("Failed to create request: %v", err)
 		return false
 	}
-	
-	urlStr := "http://172.105.57.57/SMSApi/send"
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	// client := &http.Client{
-	// 	Timeout: 10 * time.Second,
-	// }
-
-	response, err := http.Post(urlStr, "application/json", bytes.NewBuffer(jsonPayload))
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
-		ErrorLogger.Printf("SMS API failed with error : ")
-		ErrorLogger.Println(err)
+		ErrorLogger.Printf("SMS API failed with error: %v", err)
 		return false
 	}
-	defer response.Body.Close()
+	defer resp.Body.Close()
 
-	bodyBytes, err := io.ReadAll(response.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("Failed to read response body: %v\n", err)
+		ErrorLogger.Printf("Failed to read response body: %v", err)
 		return false
 	}
-	bodyString := string(bodyBytes)
 
-	fmt.Println("Response Body:", bodyString)
+	fmt.Println("Response Body:", string(body))
 
-	if response.StatusCode == http.StatusOK {
+	if resp.StatusCode == http.StatusOK {
 		return true
 	}
 
-	ErrorLogger.Println("Failed to send SMS. Status code : ", response.StatusCode)
+	ErrorLogger.Printf("Failed to send SMS. Status code: %d", resp.StatusCode)
 	return false
 }
