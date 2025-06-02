@@ -54,6 +54,8 @@ func OtpLogin(w http.ResponseWriter, r *http.Request) {
 	} else {
 		message = fmt.Sprintf("Failed to send OTP to %s", masked_phone)
 	}
+	Custom4O4Error(w,message)
+	return
 	InfoLogger.Println(message)
 
 	
